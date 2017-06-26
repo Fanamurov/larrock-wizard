@@ -26,11 +26,13 @@ class AdminWizard
      */
     public function findXLSX()
     {
-        $files = collect(\File::allFiles(resource_path('wizard')));
-        $filtered = $files->filter(function ($value, $key) {
-            return $value->getExtension() === 'xlsx';
-        });
-        return $filtered->first();
+        if(\File::exists(resource_path('wizard'))){
+            $files = collect(\File::allFiles(resource_path('wizard')));
+            $filtered = $files->filter(function ($value, $key) {
+                return $value->getExtension() === 'xlsx';
+            });
+            return $filtered->first();
+        }
     }
 
 

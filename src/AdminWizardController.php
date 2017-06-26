@@ -49,18 +49,23 @@ class AdminWizardController extends Controller
      */
 	public function index(AdminWizard $adminWizard)
     {
-        $data['data'] = Excel::load($adminWizard->findXLSX(), function($reader) {
-            $reader->take(3);
-        })->get();
+        if($adminWizard->findXLSX()){
+            $data['data'] = Excel::load($adminWizard->findXLSX(), function($reader) {
+                $reader->take(3);
+            })->get();
+
+            $data['rows'] = $adminWizard->rows;
+            $data['xlsx'] = $adminWizard->findXLSX();
+            $data['fillable'] = $adminWizard->getFillableRows();
+        }else{
+            Alert::add('errorAdmin', '.xlsx-файл отсутствует в директории /resources/wizard')->flash();
+            $data = [];
+        }
 
         Breadcrumbs::register('admin.wizard.result', function($breadcrumbs)
         {
             $breadcrumbs->parent('admin.wizard.index');
         });
-
-        $data['rows'] = $adminWizard->rows;
-        $data['xlsx'] = $adminWizard->findXLSX();
-        $data['fillable'] = $adminWizard->getFillableRows();
 
         Cache::forget('scanImageDir');
 

@@ -7,7 +7,7 @@
             <a class="uk-button" href="#modal-help" data-uk-modal="{target:'#modal-help'}"><i class="uk-icon-question"></i></a>
             <a class="uk-button uk-button-primary" href="/admin/{{ $app->name }}/help">Помощь</a>
             <a class="uk-button uk-button-primary" href="/admin/{{ $app->name }}/clear/manual">Ручная очистка каталога</a>
-            <button type="button" class="start_import uk-button uk-button-success">Старт импорта</button>
+            <button type="button" class="start_import uk-button uk-button-success" @if( !isset($xlsx) || !isset($data)) disabled @endif>Старт импорта</button>
         </div>
         <div id="modal-help" class="uk-modal">
             <div class="uk-modal-dialog">
@@ -56,23 +56,28 @@
     </div>
     <br/>
 
-    <h3>Файл прайса: <small><a target="_blank" href="{{ $xlsx->getPathname() }}">{{ $xlsx->getFilename() }}</a></small></h3>
+    @if(isset($xlsx) || isset($data))
+        <h3>Файл прайса: <small><a target="_blank" href="{{ $xlsx->getPathname() }}">{{ $xlsx->getFilename() }}</a></small></h3>
+        <div class="uk-margin-large-bottom" id="ibox-wizard">
+            <ul class="uk-tab" data-uk-tab="{connect:'#tab-content'}">
+                @foreach($data as $data_key => $data_value)
+                    <li class="sheet{{ $data_key }} @if($loop->first) uk-active @endif">
+                        <a href="#sheet{{ $data_key }}" aria-controls="sheet{{ $data_key }}">{{ $data_value->getTitle() }}</a>
+                    </li>
+                @endforeach
+            </ul>
 
-    <div class="uk-margin-large-bottom" id="ibox-wizard">
-        <ul class="uk-tab" data-uk-tab="{connect:'#tab-content'}">
-            @foreach($data as $data_key => $data_value)
-                <li class="sheet{{ $data_key }} @if($loop->first) uk-active @endif">
-                    <a href="#sheet{{ $data_key }}" aria-controls="sheet{{ $data_key }}">{{ $data_value->getTitle() }}</a>
-                </li>
-            @endforeach
-        </ul>
-
-        <ul class="uk-switcher tab-content-wizard" id="tab-content">
-            @foreach($data as $data_key => $data_value)
-                <div role="tabpanel" class="tab-pane @if($data_key === 0) active @endif load_sheet" data-sheet="{{ $data_key }}" id="sheet{{ $data_key }}">
-                    <div id="sheet_content{{ $data_key }}" class="sheet_content"><div class="uk-alert uk-alert-warning">Загружается...</div></div>
-                </div>
-            @endforeach
-        </ul>
-    </div>
+            <ul class="uk-switcher tab-content-wizard" id="tab-content">
+                @foreach($data as $data_key => $data_value)
+                    <div role="tabpanel" class="tab-pane @if($data_key === 0) active @endif load_sheet" data-sheet="{{ $data_key }}" id="sheet{{ $data_key }}">
+                        <div id="sheet_content{{ $data_key }}" class="sheet_content"><div class="uk-alert uk-alert-warning">Загружается...</div></div>
+                    </div>
+                @endforeach
+            </ul>
+        </div>
+    @else
+        <div class="uk-margin-large-bottom">
+            <div class="uk-alert uk-alert-danger">.xlsx-файл отсутствует в директории /resources/wizard</div>
+        </div>
+    @endif
 @endsection
