@@ -1,0 +1,23 @@
+{
+    "name": "fanamurov/larrock-wizard",
+    "description": "Import .xlsx price to catalog component for larrockCMS",
+    "type": "library",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Alexandr Fanamurov",
+            "email": "fanamurov@ya.ru"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Larrock\\ComponentWizard\\": "src"
+        }
+    },
+    "require": {
+        "fanamurov/larrock-core": "^0.1",
+        "fanamurov/larrock-catalog": "^0.1",
+        "fanamurov/larrock-category": "^0.1",
+        "maatwebsite/excel": "^2.1",
+    }
+}
