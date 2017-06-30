@@ -18,7 +18,7 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/lang' => resource_path('lang/larrock'),
-            __DIR__.'/views' => base_path('resources/views/larrock'),
+            __DIR__.'/views' => base_path('resources/views/vendor/larrock')
         ]);
     }
 
