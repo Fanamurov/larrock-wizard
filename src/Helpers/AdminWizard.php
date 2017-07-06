@@ -14,7 +14,7 @@ class AdminWizard
 
     public function __construct()
     {
-        if($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()){
+        if($get_config_db = Model_Config::whereType('wizard')->first()){
             $this->rows = $get_config_db->value;
         }
     }
