@@ -60,11 +60,17 @@
         <h3>Файл прайса: <small><a target="_blank" href="{{ $xlsx->getPathname() }}">{{ $xlsx->getFilename() }}</a></small></h3>
         <div class="uk-margin-large-bottom" id="ibox-wizard">
             <ul class="uk-tab" data-uk-tab="{connect:'#tab-content'}">
-                @foreach($data as $data_key => $data_value)
-                    <li class="sheet{{ $data_key }} @if($loop->first) uk-active @endif">
-                        <a href="#sheet{{ $data_key }}" aria-controls="sheet{{ $data_key }}">{{ $data_value->getTitle() }}</a>
+                @if(count($data) > 1)
+                    @foreach($data as $data_key => $data_value)
+                        <li class="sheet{{ $data_key }} @if($loop->first) uk-active @endif">
+                            <a href="#sheet{{ $data_key }}" aria-controls="sheet{{ $data_key }}">{{ $data_value->getTitle() }}</a>
+                        </li>
+                    @endforeach
+                @else
+                    <li class="sheet0 uk-active">
+                        <a href="#sheet0" aria-controls="sheet0">{{ $data->getTitle() }}</a>
                     </li>
-                @endforeach
+                @endif
             </ul>
 
             <ul class="uk-switcher tab-content-wizard" id="tab-content">

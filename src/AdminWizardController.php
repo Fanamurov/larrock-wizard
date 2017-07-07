@@ -49,9 +49,11 @@ class AdminWizardController extends Controller
      */
 	public function index(AdminWizard $adminWizard)
     {
+        $adminWizard->artisanSheetImport(0); //ВРЕМЕНЕННО!!
+
         if($adminWizard->findXLSX()){
             $data['data'] = Excel::load($adminWizard->findXLSX(), function($reader) {
-                $reader->take(3);
+                $reader->takeRows(1);
             })->get();
 
             $data['rows'] = $adminWizard->rows;
@@ -100,7 +102,12 @@ class AdminWizardController extends Controller
         $data['images'] = Cache::remember('scanImageDir', 1440, function() use ($adminWizard){
             return $adminWizard->scanImageDir();
         });
-        return view('larrock::admin.wizard.sheet', $data);
+        if(count($data['data']) > 0){
+            return view('larrock::admin.wizard.sheet', $data);
+        }else{
+            Alert::add('errorAdmin', 'В листе #'. $sheet .' не найдено данных');
+            return response('В листе #'. $sheet .' не найдено данных');
+        }
     }
 
 
@@ -196,7 +203,7 @@ class AdminWizardController extends Controller
 
         if( !$data = Model_Config::whereType('wizard')->whereName('catalog')->first()){
             $data = new Model_Config();
-            $data->key = 'catalog';
+            $data->name = 'catalog';
             $data->type = 'wizard';
             $data->value = serialize($config);
         }else{
@@ -290,7 +297,7 @@ class AdminWizardController extends Controller
     public function createMigration(Request $request)
     {
         if($request->has('column') && $request->get('column', '') !== ''){
-            $schema = $request->get('column') .':text';
+            $schema = $request->get('column') .':text:nullable';
             \Artisan::call('make:migration:schema', ['name' => 'update_catalog_table', '--schema' => $schema, '--model' => 'false']);
             \Artisan::call('migrate');
             return response()->json(['status' => 'success', 'message' => $request->get('column') .' добавлена в колонки таблицы catalog']);

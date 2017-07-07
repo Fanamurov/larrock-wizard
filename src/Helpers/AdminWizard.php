@@ -3,6 +3,7 @@
 namespace Larrock\ComponentWizard\Helpers;
 
 use Auth;
+use Excel;
 use Illuminate\Http\Request;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentCatalog\Models\Catalog;
@@ -14,8 +15,50 @@ class AdminWizard
 
     public function __construct()
     {
-        if($get_config_db = Model_Config::whereType('wizard')->first()){
+        if($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()){
             $this->rows = $get_config_db->value;
+        }
+    }
+
+    public function artisanSheetImport($sheet)
+    {
+        $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
+        $rows = $this->rows;
+        $fillable = $this->getFillableRows();
+
+        $current_category = 'undefined';
+        $current_level = 'undefined';
+
+        foreach ($data as $data_value){
+            preg_match_all('/R[0-9]/', $data_value['naimenovanie'], $level);
+            if(str_contains($data_value['naimenovanie'], '{=R')){
+                if($category = $this->search_category($data_value['naimenovanie'])){
+                    $request = new Request();
+                    $request->merge($data_value->toArray());
+                    $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
+
+                    $import_category = $this->importCategory($category, $request);
+                    $current_category = $import_category['category_id'];
+                    $current_level = $import_category['category_level'];
+                }
+            }else{
+                $request = new Request();
+
+                $data = [];
+                foreach($this->rows as $key => $row){
+                    if($data_value->has($key)){
+                        if(empty($row['db']) && $key === 'foto'){
+                            $data['foto'] = $data_value->get($key);
+                        }else{
+                            $data[$row['db']] = $data_value->get($key);
+                        }
+                    }
+                }
+
+                $request->merge($data);
+                $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
+                $import_tovar = $this->importTovar($request);
+            }
         }
     }
 
@@ -53,7 +96,7 @@ class AdminWizard
 
         $category = new Category();
         $category->fill($data);
-        $category->type = 'catalog';
+        $category->component = 'catalog';
 
         $getParent = $this->searchParentCategory($category->level, $request->get('current_category'), $request->get('current_level'));
         $getParentSearch = Category::whereId($getParent['id'])->first();
@@ -75,7 +118,11 @@ class AdminWizard
         $category->sitemap = 1;
         $category->position = 0;
         $category->active = 1;
-        $category->user_id = Auth::user()->id;
+        if(Auth::user()){
+            $category->user_id = Auth::user()->id;
+        }else{
+            $category->user_id = NULL;
+        }
 
         //Проверяем, вносили ли мы уже эту категорию в базу
         if($oldCategory = Category::whereUrl($category->url)->first()){
@@ -210,7 +257,11 @@ class AdminWizard
         $catalog->url = str_slug($catalog->title) .'-'. $request->get('current_category') .'-'. $catalog->cost .'-'. random_int(0,9999);
         $catalog->position = 0;
         $catalog->active = 1;
-        $catalog->user_id = Auth::user()->id;
+        if(Auth::user()){
+            $catalog->user_id = Auth::user()->id;
+        }else{
+            $catalog->user_id = NULL;
+        }
 
         if($save = $catalog->save()){
             $catalog->get_category()->attach($request->get('current_category'));
@@ -271,6 +322,7 @@ class AdminWizard
     public function deleteCatalog()
     {
         $delete = Catalog::all();
+
         foreach($delete as $delete_value){
             //Очищаем связи с фото
             $find_item = Catalog::find($delete_value->id);
@@ -293,7 +345,7 @@ class AdminWizard
      */
     public function deleteCategoryCatalog()
     {
-        $delete = Category::whereType('catalog')->get();
+        $delete = Category::whereComponent('catalog')->get();
         foreach($delete as $delete_value){
             //Очищаем связи с фото
             $find_item = Category::find($delete_value->id);

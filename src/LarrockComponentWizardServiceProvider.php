@@ -3,6 +3,9 @@
 namespace Larrock\ComponentWizard;
 
 use Illuminate\Support\ServiceProvider;
+use Larrock\ComponentWizard\Commands\WizardImportClearCommand;
+use Larrock\ComponentWizard\Commands\WizardImportCommand;
+use Larrock\ComponentWizard\Commands\WizardImportSheetCommand;
 
 class LarrockComponentWizardServiceProvider extends ServiceProvider
 {
@@ -31,5 +34,14 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
     {
         include __DIR__.'/routes.php';
         $this->app->make(WizardComponent::class);
+
+        $this->app->bind('command.wizard:import', WizardImportCommand::class);
+        $this->app->bind('command.wizard:sheet', WizardImportSheetCommand::class);
+        $this->app->bind('command.wizard:clear', WizardImportClearCommand::class);
+        $this->commands([
+            'command.wizard:import',
+            'command.wizard:sheet',
+            'command.wizard:clear',
+        ]);
     }
 }
