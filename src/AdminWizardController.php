@@ -19,13 +19,13 @@ use Larrock\ComponentWizard\Helpers\AdminWizard;
  */
 class AdminWizardController extends Controller
 {
-	protected $config;
+    protected $config;
     //protected $rows;
     //protected $downloadedImages;
     //protected $xlsx;
 
-	public function __construct(AdminWizard $adminWizard)
-	{
+    public function __construct(AdminWizard $adminWizard)
+    {
         $Component = new WizardComponent();
         $this->config = $Component->shareConfig();
         //$this->rows = $adminWizard->rows;
@@ -37,7 +37,7 @@ class AdminWizardController extends Controller
         Breadcrumbs::register('admin.'. $this->config->name .'.index', function($breadcrumbs){
             $breadcrumbs->push($this->config->title, route('admin.wizard.help'));
         });
-	}
+    }
 
 
     /**
@@ -47,10 +47,8 @@ class AdminWizardController extends Controller
      * @param AdminWizard $adminWizard
      * @return array|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
-	public function index(AdminWizard $adminWizard)
+    public function index(AdminWizard $adminWizard)
     {
-        $adminWizard->artisanSheetImport(0); //ВРЕМЕНЕННО!!
-
         if($adminWizard->findXLSX()){
             $data['data'] = Excel::load($adminWizard->findXLSX(), function($reader) {
                 $reader->takeRows(1);
