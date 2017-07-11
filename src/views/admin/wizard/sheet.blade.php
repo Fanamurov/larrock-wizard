@@ -5,13 +5,38 @@
             <div class="uk-progress-bar" style="width: 15%;"><span class="imported_rows">0</span> из <span class="all_rows">{{ count($data) }}</span></div>
         </div>
 
+        <script type="text/javascript">
+
+            $('button.find_image').click(function () {
+                $(this).parent().find('select')
+                @foreach($images as $image)
+                    .append($("<option></option>")
+                    .attr("value", "{{ $image }}")
+                    .text("{{ $image }}"))
+                @endforeach
+                ;
+                    $(this).remove();
+            });
+
+        </script>
+
         @foreach($data as $data_key => $data_value)
             @if( !empty($data_value['naimenovanie']))
                 <form action="/admin/wizard/importrow" method="post" class="import_row uk-form">
                     {!! csrf_field() !!}
-                    <table class="uk-table">
+                    <table class="uk-table uk-table-condensed">
                         @if($loop->first)
                             <thead>
+                            @if($loop->first)
+                                <tr>
+                                    <th></th>
+                                    @foreach($data->first() as $colomn_name => $colomn_value)
+                                        @if( !empty($colomn_name))
+                                            <th>@lang('larrock::excelcells.'.$loop->iteration)</th>
+                                        @endif
+                                    @endforeach
+                                </tr>
+                            @endif
                             <tr>
                                 <th>1</th>
                                 @foreach($data->first() as $colomn_name => $colomn_value)
@@ -31,18 +56,19 @@
                                         <td>{{ $data_key+2 }}</td>
                                     @endif
                                     @if($colomn_name === 'foto')
-                                        <td class="@if(!empty($colomn_value) && !in_array($data_value['foto'], $images)) uk-alert-danger @endif">
+                                        <td class="@if(!empty($colomn_value) && !in_array($data_value['foto'], $images)) uk-alert-danger @endif uk-position-relative">
                                             <select name="{{ $colomn_name }}" class="cell_value" style="width: 150px" data-oldvalue="{{ $colomn_value }}"
-                                                    data-coordinate="@lang('excelcells.'.$loop->iteration){{ $data_key+2 }}" data-sheet="{{ $sheet }}">
+                                                    data-coordinate="@lang('larrock::excelcells.'.$loop->iteration){{ $data_key+2 }}" data-sheet="{{ $sheet }}">
                                                 @if(empty($colomn_value))
                                                     <option></option>
                                                 @else
                                                     <option>[! {{ $colomn_value }} не найдено !]</option>
                                                 @endif
-                                                @foreach($images as $image)
-                                                    <option @if($image === $colomn_value) selected @endif value="{{ $image }}">{{ $image }}</option>
-                                                @endforeach
+                                                @if(in_array($data_value['foto'], $images))
+                                                    <option selected value="{{ $data_value['foto'] }}">{{ $data_value['foto'] }}</option>
+                                                @endif
                                             </select>
+                                            <button style="position: absolute; top: 4px; right: 3px;" type="button" class="find_image uk-button" data-coordinate="@lang('excelcells.'.$loop->iteration){{ $data_key+2 }}" data-sheet="{{ $sheet }}">+</button>
                                         </td>
                                     @elseif(isset($rows[$colomn_name]) && empty($rows[$colomn_name]['db']))
                                         <td><input data-oldvalue="{{ $colomn_value }}" data-coordinate="@lang('excelcells.'.$loop->iteration){{ $data_key+2 }}" data-sheet="{{ $sheet }}"
@@ -67,7 +93,7 @@
     <div class="uk-overflow-container">
         <form action="/admin/wizard/storeConfig" method="post" class="uk-form">
             {!! csrf_field() !!}
-            <table class="uk-table table-config">
+            <table class="uk-table uk-table-condensed table-config">
                 <thead>
                 <tr>
                     <th></th>

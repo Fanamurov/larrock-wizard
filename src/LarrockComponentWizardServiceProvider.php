@@ -16,11 +16,12 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->loadRoutesFrom(__DIR__.'/routes.php');
         $this->loadViewsFrom(__DIR__.'/views', 'larrock');
         $this->loadTranslationsFrom(__DIR__.'/lang', 'larrock');
 
         $this->publishes([
-            __DIR__.'/lang' => resource_path('lang/larrock'),
+            __DIR__.'/lang' => resource_path('lang/vendor/larrock'),
             __DIR__.'/views' => base_path('resources/views/vendor/larrock')
         ]);
     }
@@ -32,7 +33,6 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        include __DIR__.'/routes.php';
         $this->app->make(WizardComponent::class);
 
         $this->app->bind('command.wizard:import', WizardImportCommand::class);

@@ -215,14 +215,14 @@ class AdminWizard
             //Ищем указание нескольких фото
             $images = array_map('trim', explode(',', $image_name));
             foreach ($images as $image){
-                if(file_exists(public_path('media/Wizard/'). $image)){
+                //Именно base_path, при вызове через artisan public_path() не правильный
+                if(file_exists(base_path('public_html/media/Wizard/'. $image))){
                     if($type === 'category'){
                         $content = Category::findOrFail($id_content);
                     }else{
                         $content = Catalog::findOrFail($id_content);
                     }
-                    //TODO: импорт фото не работает
-                    if( !$content->addMedia(public_path('media/Wizard/'). $image)->preservingOriginal()->toMediaLibrary('images')){
+                    if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaLibrary('images')){
                         return ['status' => 'error', 'message' => 'Фото '. $image. ' найдено, но не обработано'];
                     }
                 }else{
