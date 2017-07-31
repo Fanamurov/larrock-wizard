@@ -6,8 +6,8 @@ use Auth;
 use Excel;
 use Illuminate\Http\Request;
 use Larrock\Core\Models\Config as Model_Config;
-use Larrock\ComponentCatalog\Models\Catalog;
-use Larrock\ComponentCategory\Models\Category;
+use Larrock\ComponentCatalog\Facades\LarrockCatalog;
+use Larrock\ComponentCategory\Facades\LarrockCategory;
 
 class AdminWizard
 {
@@ -94,21 +94,20 @@ class AdminWizard
             }
         }
 
-        $category = new Category();
-        $category->fill($data);
+        $category = LarrockCategory::getModel()->fill($data);
         $category->component = 'catalog';
 
         $getParent = $this->searchParentCategory($category->level, $request->get('current_category'), $request->get('current_level'));
-        $getParentSearch = Category::whereId($getParent['id'])->first();
+        $getParentSearch = LarrockCategory::getModel()->whereId($getParent['id'])->first();
         $category->parent = $getParent['id'];
 
-        if($category->level > 0){
+        if($category->level > 1){
             $category->url = str_slug($category->title) .'-'. str_slug($getParentSearch->title) .'-l'. $category->level;
         }else{
             $category->url = str_slug($category->title);
         }
         if(strlen($category->url) > 200){
-            if($category->level > 0){
+            if($category->level > 1){
                 $category->url = str_limit(str_slug($category->title), 190, '') .'-'. str_limit(str_slug($getParentSearch->title), 8, '') .'-l'. $category->level;
             }else{
                 $category->url = str_limit($category->url, 200, '');
@@ -125,7 +124,7 @@ class AdminWizard
         }
 
         //Проверяем, вносили ли мы уже эту категорию в базу
-        if($oldCategory = Category::whereUrl($category->url)->first()){
+        if($oldCategory = LarrockCategory::getModel()->whereUrl($category->url)->first()){
             return ['category_id' => $oldCategory->id, 'category_level' => $oldCategory->level, 'category_title' => $oldCategory->title];
         }
 
@@ -170,20 +169,20 @@ class AdminWizard
                 }
             }else{
                 //Если уровень добавляемого раздела значительно меньше переданного родительского //1-3
-                if($upLevel = Category::whereId($currentParentId)->first()){
-                    if($upLevelParent = Category::whereParent($upLevel->Id)->first()){
+                if($upLevel = LarrockCategory::getModel()->whereId($currentParentId)->first()){
+                    if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevel->Id)->first()){
                         if($upLevelParent->level+1 === $addLevel){
                             return ['id' => $upLevelParent->id, 'level' => $upLevelParent->level];
                         }else{
-                            if($upLevelParent = Category::whereParent($upLevelParent->Id)->first()){
+                            if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
                                 if($upLevelParent->level+1 === $addLevel){
                                     return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
                                 }else{
-                                    if($upLevelParent = Category::whereParent($upLevelParent->Id)->first()){
+                                    if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
                                         if($upLevelParent->level+1 === $addLevel){
                                             return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
                                         }else{
-                                            if($upLevelParent = Category::whereParent($upLevelParent->Id)->first()){
+                                            if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
                                                 return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
                                             }
                                         }
@@ -218,9 +217,9 @@ class AdminWizard
                 //Именно base_path, при вызове через artisan public_path() не правильный
                 if(file_exists(base_path('public_html/media/Wizard/'. $image))){
                     if($type === 'category'){
-                        $content = Category::findOrFail($id_content);
+                        $content = LarrockCategory::getModel()->findOrFail($id_content);
                     }else{
-                        $content = Catalog::findOrFail($id_content);
+                        $content = LarrockCategory::getModel()->findOrFail($id_content);
                     }
                     if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaLibrary('images')){
                         return ['status' => 'error', 'message' => 'Фото '. $image. ' найдено, но не обработано'];
@@ -249,8 +248,7 @@ class AdminWizard
                 $data[$row['db']] = $request->get($key);
             }
         }
-        $catalog = new Catalog();
-        $catalog->fill($request->all());
+        $catalog = LarrockCatalog::getModel()->fill($request->all());
         if($request->has('cost')){
             $catalog->cost = str_replace(',', '.', $catalog->cost);
         }
@@ -286,8 +284,7 @@ class AdminWizard
      */
     public function getFillableRows()
     {
-        $catalog = new Catalog();
-        return $catalog->getFillable();
+        return LarrockCatalog::getModel()->getFillable();
     }
 
 
@@ -321,11 +318,11 @@ class AdminWizard
      */
     public function deleteCatalog()
     {
-        $delete = Catalog::all();
+        $delete = LarrockCatalog::getModel()->all();
 
         foreach($delete as $delete_value){
             //Очищаем связи с фото
-            $find_item = Catalog::find($delete_value->id);
+            $find_item = LarrockCatalog::getModel()->find($delete_value->id);
             $find_item->clearMediaCollection();
 
             $delete_value->delete();
@@ -345,10 +342,10 @@ class AdminWizard
      */
     public function deleteCategoryCatalog()
     {
-        $delete = Category::whereComponent('catalog')->get();
+        $delete = LarrockCategory::getModel()->whereComponent('catalog')->get();
         foreach($delete as $delete_value){
             //Очищаем связи с фото
-            $find_item = Category::find($delete_value->id);
+            $find_item = LarrockCategory::getModel()->find($delete_value->id);
             $find_item->clearMediaCollection();
 
             $delete_value->delete();

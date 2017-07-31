@@ -13,25 +13,17 @@ use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
 
 /**
- * TODO: редактирование вывода полей
  * Class AdminWizardController
  * @package App\Http\Controllers\Admin
  */
 class AdminWizardController extends Controller
 {
     protected $config;
-    //protected $rows;
-    //protected $downloadedImages;
-    //protected $xlsx;
 
     public function __construct(AdminWizard $adminWizard)
     {
         $Component = new WizardComponent();
         $this->config = $Component->shareConfig();
-        //$this->rows = $adminWizard->rows;
-        //$this->xlsx = $adminWizard->findXLSX();
-        //$this->downloadedImages = $adminWizard->scanImageDir();
-        //\View::share('downloadedImages', $this->downloadedImages);
 
         Breadcrumbs::setView('larrock::admin.breadcrumb.breadcrumb');
         Breadcrumbs::register('admin.'. $this->config->name .'.index', function($breadcrumbs){
