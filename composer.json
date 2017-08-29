@@ -20,5 +20,12 @@
         "fanamurov/larrock-category": "^0.1",
         "maatwebsite/excel": "^2.1",
         "laracasts/generators": "^1.1"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Larrock\\ComponentWizard\\LarrockComponentWizardServiceProvider"
+            ]
+        }
     }
 }
