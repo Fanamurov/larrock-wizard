@@ -164,7 +164,7 @@ class AdminWizard
             }elseif($addLevel === (int)$currentParentLevel){
                 //Если уровень добавляемого раздела равен родительскому //2-2
                 //То ищем id раздела уровнем выше
-                if($upLevel = Category::whereId($currentParentId)->first()){
+                if($upLevel = LarrockCategory::getModel()->whereId($currentParentId)->first()){
                     return ['id' => $upLevel->parent, 'level' => $upLevel->level];
                 }
             }else{
@@ -218,8 +218,8 @@ class AdminWizard
                 if(file_exists(base_path('public_html/media/Wizard/'. $image))){
                     if($type === 'category'){
                         $content = LarrockCategory::getModel()->findOrFail($id_content);
-                    }else{
-                        $content = LarrockCategory::getModel()->findOrFail($id_content);
+                    }elseif($type === 'catalog'){
+                        $content = LarrockCatalog::getModel()->findOrFail($id_content);
                     }
                     if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaLibrary('images')){
                         return ['status' => 'error', 'message' => 'Фото '. $image. ' найдено, но не обработано'];
@@ -322,9 +322,9 @@ class AdminWizard
 
         foreach($delete as $delete_value){
             //Очищаем связи с фото
-            $find_item = LarrockCatalog::getModel()->find($delete_value->id);
-            $find_item->clearMediaCollection();
-
+            if($find_item = LarrockCatalog::getModel()->find($delete_value->id)){
+                $find_item->clearMediaCollection();
+            }
             $delete_value->delete();
             if($delete_value->get_category()->count() > 0){
                 $delete_value->get_category()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
@@ -345,8 +345,9 @@ class AdminWizard
         $delete = LarrockCategory::getModel()->whereComponent('catalog')->get();
         foreach($delete as $delete_value){
             //Очищаем связи с фото
-            $find_item = LarrockCategory::getModel()->find($delete_value->id);
-            $find_item->clearMediaCollection();
+            if($find_item = LarrockCategory::getModel()->find($delete_value->id)){
+                $find_item->clearMediaCollection();
+            }
 
             $delete_value->delete();
         }
