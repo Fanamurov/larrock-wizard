@@ -25,7 +25,7 @@ class AdminWizardController extends Controller
         $Component = new WizardComponent();
         $this->config = $Component->shareConfig();
 
-        Breadcrumbs::setView('larrock::admin.breadcrumb.breadcrumb');
+        \Config::set('breadcrumbs.view', 'larrock::admin.breadcrumb.breadcrumb');
         Breadcrumbs::register('admin.'. $this->config->name .'.index', function($breadcrumbs){
             $breadcrumbs->push($this->config->title, route('admin.wizard.help'));
         });
