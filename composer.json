@@ -15,9 +15,9 @@
         }
     },
     "require": {
-        "fanamurov/larrock-core": "^0.1",
-        "fanamurov/larrock-catalog": "^0.1",
-        "fanamurov/larrock-category": "^0.1",
+        "fanamurov/larrock-core": "^0.2",
+        "fanamurov/larrock-catalog": "^0.2",
+        "fanamurov/larrock-category": "^0.2",
         "maatwebsite/excel": "^2.1",
         "laracasts/generators": "dev-master as 1.1.4"
     },
