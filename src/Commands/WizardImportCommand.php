@@ -48,10 +48,11 @@ class WizardImportCommand extends Command
             })->get();
 
             foreach ($data as $key => $sheet){
-                $this->info('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
+                $this->line('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
                 $this->call('wizard:sheet', ['--sheet' => $key]);
             }
-            $this->info('Import ended');
+            $this->info('SUCCESS! Import ended');
+            $this->call('cache:clear');
         }
     }
 }

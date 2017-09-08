@@ -57,7 +57,9 @@ class AdminWizard
 
                 $request->merge($data);
                 $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
-                $import_tovar = $this->importTovar($request);
+                if( !empty($request->get('title'))){
+                    $import_tovar = $this->importTovar($request);
+                }
             }
         }
     }

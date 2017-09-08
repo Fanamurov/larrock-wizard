@@ -1,60 +1,68 @@
-# Laravel Larrock Wizard component
+[![Latest Stable Version](https://poser.pugx.org/fanamurov/larrock-smartbanners/version)](https://packagist.org/packages/fanamurov/larrock-smartbanners) [![Total Downloads](https://poser.pugx.org/fanamurov/larrock-smartbanners/downloads)](https://packagist.org/packages/fanamurov/larrock-smartbanners) [![License](https://poser.pugx.org/fanamurov/larrock-smartbanners/license)](https://packagist.org/packages/fanamurov/larrock-smartbanners)
 
----
-*Import .xlsx price to catalog component for larrockCMS*
+Компонент используется только внутри студии "Март" в Хабаровске. Выполняет роль клиента баннерообменной сети.
 
-#### Depends:
-  - fanamurov/larrock-core
-  - fanamurov/larrock-catalog
-  - fanamurov/larrock-category
-  - maatwebsite/excel
-  - laracasts/generators
-
-## INSTALL
-
-1.Install larrock-core, larrock-catalog, larrock-category
-
-2.Add service providers (config/app.php)
-```php
-//http://www.maatwebsite.nl/laravel-excel/docs/import
-Maatwebsite\Excel\ExcelServiceProvider::class,
-//https://github.com/laracasts/Laravel-5-Generators-Extended
-\Laracasts\Generators\GeneratorsServiceProvider::class,
-```
-Add alias servise providers
-```php
-'Excel'     => Maatwebsite\Excel\Facades\Excel::class,
-```
-
-3.Publish vendor files
+## Установка компонента LarrockSmartbanners
 ```sh
-$ php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider"
+composer require fanamurov/larrock-smartbanners
 ```
 
+## Показ баннеров
+1. За вывод баннеров отвечает **middleware Smartbanners**. Подключите его в **app/Http/Kernel.php** в секцию $middlewareGroups - web
+	```php
+	use Larrock\ComponentSmartbanners\Middleware\Smartbaners;
+	
+	class Kernel extends HttpKernel
+	{
+	 protected $middlewareGroups = [
+	        'web' => [
+	            ...
+	            Smartbanners::class
+	        ],
+	        ...
+	    ];
+	}
+	```
 
-##START
-Load .xlsx file, сonfigure import and import
-http://yousite/admin/wizard
+2. В **.env**-файле вашего сайта определите значения:
+	```
+	SMARTBANNERS=(true/false) //активировать ли показы
+	SMARTBANNERS_BANNERS= //Сколько баннеров показывать
+	SMARTBANNERS_PARTNERS= //Сколько баннеров партнеров показывать
+	SMARTBANNERS_HOST= //Хост сайта показывающего баннеры
+	SMARTBANNERS_SERVER= //Хост сайта сервера баннерообменки
+	```
+	Пример:
+	```
+	SMARTBANNERS=true
+	SMARTBANNERS_BANNERS=2
+	SMARTBANNERS_PARTNERS=1
+	SMARTBANNERS_HOST=martds_ru
+	SMARTBANNERS_SERVER=http://martds.ru
+	```
 
-##ARTISAN COMMANDS
-Start import (clear catalog and import loaded .xlsx)
-```sh
-$ php artisan wizard:import
+3. Вызовите в шаблоне сайта:
+	```php
+	@if(env('SMARTBANNERS') === true)
+	    {!! $smartbanners !!}
+	@endif
+	```
+## Пример принимаемых данных от сервера баннерообменки (json):
 ```
-Clear catalog
-```sh
-$ php artisan wizard:clear
+array (
+  0 => 
+  array (
+    'title' => 'Отличные цены [link_start]Входные двери продажа со склада[link_end]',
+    'id' => '2',
+    'banner_url' => 'http://site.ru',
+    'image' => '/public/images/sbanners/big/sbanners.png',
+  ),
+  1 => 
+  array (
+    'title' => '[link_start]Компания "Рога и копыта"[link_end]',
+    'id' => '16',
+    'banner_url' => 'http://site2.ru',
+    'image' => '/public/images/sbanners/big/sbanners_2.png',
+  ),
+)
 ```
-Start import selected sheet
-```sh
-$ php artisan wizard:sheet --sheet={number sheet}
-```
-
-##NOTES
-
- - The file for import must be only one
- - The file must be in the directory '/resources/wizard'
-
-##WORK WITH LARAVEL 5.4
-https://github.com/laracasts/Laravel-5-Generators-Extended/issues/117
-fix: https://github.com/laracasts/Laravel-5-Generators-Extended/pull/120/files
