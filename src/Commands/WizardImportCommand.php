@@ -42,6 +42,7 @@ class WizardImportCommand extends Command
         $this->call('wizard:clear');
 
         if ($this->confirm('Start Import?')) {
+            $this->call('cache:clear');
             $adminWizard = new AdminWizard();
             $data = Excel::load($adminWizard->findXLSX(), function($reader) {
                 $reader->takeRows(1);
