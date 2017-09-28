@@ -90,6 +90,9 @@ class AdminWizard
      */
     public function importCategory($data, Request $request)
     {
+        $prev_category = $request->get('current_category');
+        $prev_level = $request->get('current_level');
+
         foreach($this->rows as $key => $row){
             if($request->has($key) && $row['db'] !== 'title'){
                 $data[$row['db']] = $request->get($key);
@@ -99,18 +102,34 @@ class AdminWizard
         $category = LarrockCategory::getModel()->fill($data);
         $category->component = 'catalog';
 
-        $getParent = $this->searchParentCategory($category->level, $request->get('current_category'), $request->get('current_level'));
-        $getParentSearch = LarrockCategory::getModel()->whereId($getParent['id'])->first();
-        $category->parent = $getParent['id'];
+        if($category->level === 1){
+            $category->parent = NULL;
+        }else{
+            if((int)$prev_level +1 === $category->level){
+                $category->parent = $prev_category;
+            }
+            else{
+                $prev_category_data = LarrockCategory::getModel()->find($prev_category);
+                $get_parent = collect($prev_category_data->parent_tree)->where('level', $category->level - 1);
+                $category->parent = $get_parent->first()->id;
+            }
+        }
+
+        $slug_parent = \Cache::remember('getSlugWizard'. $category->parent, 1440, function() use ($category){
+            if($getParentSearch = LarrockCategory::getModel()->find($category->parent)){
+                return str_slug($getParentSearch->title);
+            }
+            return '';
+        });
 
         if($category->level > 1){
-            $category->url = str_slug($category->title) .'-'. str_slug($getParentSearch->title) .'-l'. $category->level;
+            $category->url = str_slug($category->title) .'-'. $slug_parent .'-l'. $category->level;
         }else{
             $category->url = str_slug($category->title);
         }
         if(strlen($category->url) > 200){
             if($category->level > 1){
-                $category->url = str_limit(str_slug($category->title), 190, '') .'-'. str_limit(str_slug($getParentSearch->title), 8, '') .'-l'. $category->level;
+                $category->url = str_limit(str_slug($category->title), 190, '') .'-'. str_limit($slug_parent, 8, '') .'-l'. $category->level;
             }else{
                 $category->url = str_limit($category->url, 200, '');
             }
@@ -143,60 +162,6 @@ class AdminWizard
         }
 
         return abort(500, 'Раздел не был добавлен');
-    }
-
-
-    /**
-     * Поиск категории-родителя для импорта раздела
-     *
-     * @param $addLevel
-     * @param $currentParentId
-     * @param $currentParentLevel
-     * @return array
-     */
-    public function searchParentCategory($addLevel, $currentParentId, $currentParentLevel)
-    {
-        if($currentParentId === 'undefined'){
-            return ['id' => NULL, 'level' => NULL, 'title' => NULL];
-        }else{
-            //Если уровень добавляемого раздела на 1 меньше родительского //2-3
-            if($addLevel-1 === (int)$currentParentLevel){
-                //то родительским является текущий родительский элемент
-                return ['id' => $currentParentId, 'level' => $currentParentLevel];
-            }elseif($addLevel === (int)$currentParentLevel){
-                //Если уровень добавляемого раздела равен родительскому //2-2
-                //То ищем id раздела уровнем выше
-                if($upLevel = LarrockCategory::getModel()->whereId($currentParentId)->first()){
-                    return ['id' => $upLevel->parent, 'level' => $upLevel->level];
-                }
-            }else{
-                //Если уровень добавляемого раздела значительно меньше переданного родительского //1-3
-                if($upLevel = LarrockCategory::getModel()->whereId($currentParentId)->first()){
-                    if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevel->Id)->first()){
-                        if($upLevelParent->level+1 === $addLevel){
-                            return ['id' => $upLevelParent->id, 'level' => $upLevelParent->level];
-                        }else{
-                            if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
-                                if($upLevelParent->level+1 === $addLevel){
-                                    return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
-                                }else{
-                                    if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
-                                        if($upLevelParent->level+1 === $addLevel){
-                                            return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
-                                        }else{
-                                            if($upLevelParent = LarrockCategory::getModel()->whereParent($upLevelParent->Id)->first()){
-                                                return ['id' => $upLevelParent->parent, 'level' => $upLevelParent->level];
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return abort(500, 'Не нашли родительского раздела');
     }
 
 
