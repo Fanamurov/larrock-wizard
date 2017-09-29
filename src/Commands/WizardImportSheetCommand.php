@@ -40,7 +40,10 @@ class WizardImportSheetCommand extends Command
     {
         $sheet = $this->option('sheet');
         $adminWizard = new AdminWizard();
-        $adminWizard->artisanSheetImport($sheet);
+        $data = \Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
+        $bar = $this->output->createProgressBar(count($data));
+        $adminWizard->artisanSheetImport($sheet, $bar);
+        $bar->finish();
         $this->info('Sheet #'. $sheet .' successful imported.');
     }
 }

@@ -20,7 +20,7 @@ class AdminWizard
         }
     }
 
-    public function artisanSheetImport($sheet)
+    public function artisanSheetImport($sheet, $bar = NULL)
     {
         $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
         $rows = $this->rows;
@@ -57,9 +57,10 @@ class AdminWizard
 
                 $request->merge($data);
                 $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
-                if( !empty($request->get('title'))){
-                    $import_tovar = $this->importTovar($request);
-                }
+                $import_tovar = $this->importTovar($request);
+            }
+            if($bar){
+                $bar->advance();
             }
         }
     }
