@@ -33,5 +33,7 @@
                 "Larrock\\ComponentWizard\\LarrockComponentWizardServiceProvider"
             ]
         }
-    }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable" : true
 }
