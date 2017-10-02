@@ -5,6 +5,7 @@ namespace Larrock\ComponentWizard\Helpers;
 use Auth;
 use Excel;
 use Illuminate\Http\Request;
+use Larrock\Core\Helpers\Tree;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentCatalog\Facades\LarrockCatalog;
 use Larrock\ComponentCategory\Facades\LarrockCategory;
@@ -20,17 +21,38 @@ class AdminWizard
         }
     }
 
-    public function artisanSheetImport($sheet, $bar = NULL)
+    /**
+     * Запуск импорта через artisan
+     *
+     * @param int   $sheet          Номер листа .xlsx для импорта (начиная с нуля)
+     * @param null  $bar            Прогресс бар для artisan
+     * @param null  $sheet_data     Данные из xls
+     * @param null  $sleep          Сколько секунд ждать после 1 секунды выполнения (sweb привет)
+     */
+    public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL)
     {
-        $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
+        if($sheet_data){
+            $data = $sheet_data;
+        }else{
+            $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
+        }
+
         $rows = $this->rows;
         $fillable = $this->getFillableRows();
 
         $current_category = 'undefined';
         $current_level = 'undefined';
 
+        $start = microtime(true);
+
         foreach ($data as $data_value){
-            preg_match_all('/R[0-9]/', $data_value['naimenovanie'], $level);
+            if($sleep && $sleep > 0){
+                if(microtime(true) - $start > 1){
+                    echo 'sleep '. $sleep .' seconds';
+                    sleep($sleep);
+                    $start = microtime(true);
+                }
+            }
             if(str_contains($data_value['naimenovanie'], '{=R')){
                 if($category = $this->search_category($data_value['naimenovanie'])){
                     $request = new Request();

@@ -7,6 +7,12 @@ use Larrock\ComponentCatalog\Models\Catalog;
 use Larrock\ComponentCategory\Models\Category;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
 
+/**
+ * Очистка данных каталога перед импортом
+ *
+ * Class WizardImportClearCommand
+ * @package Larrock\ComponentWizard\Commands
+ */
 class WizardImportClearCommand extends Command
 {
     /**
@@ -14,7 +20,7 @@ class WizardImportClearCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:clear';
+    protected $signature = 'wizard:clear {--sleep= : sleep process in seconds after 1s}';
 
     /**
      * The console command description.
@@ -40,8 +46,8 @@ class WizardImportClearCommand extends Command
      */
     public function handle()
     {
-        if ($this->confirm('Clear Catalog?')) {
-
+        if($this->confirm('Clear Catalog?')){
+            $sleep = $this->option('sleep');
             $adminWizard = new AdminWizard();
             $this->info('Start catalog items deleting');
 
@@ -50,6 +56,13 @@ class WizardImportClearCommand extends Command
             $bar = $this->output->createProgressBar(count($delete));
 
             foreach($delete as $delete_value){
+                if($sleep && $sleep > 0){
+                    if(microtime(true) - $start > 1){
+                        echo 'sleep '. $sleep .' seconds';
+                        sleep($sleep);
+                        $start = microtime(true);
+                    }
+                }
                 //Очищаем связи с фото
                 $find_item = Catalog::find($delete_value->id);
                 $find_item->clearMediaCollection();
@@ -70,6 +83,13 @@ class WizardImportClearCommand extends Command
             $bar = $this->output->createProgressBar(count($delete));
 
             foreach($delete as $delete_value){
+                if($sleep && $sleep > 0){
+                    if(microtime(true) - $start > 1){
+                        echo 'sleep '. $sleep .' seconds';
+                        sleep($sleep);
+                        $start = microtime(true);
+                    }
+                }
                 $find_item = Category::find($delete_value->id);
                 $find_item->clearMediaCollection();
                 $delete_value->delete();

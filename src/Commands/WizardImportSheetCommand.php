@@ -4,7 +4,14 @@ namespace Larrock\ComponentWizard\Commands;
 
 use Illuminate\Console\Command;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
+use Excel;
 
+/**
+ * Импорт листа прайса .xlsx
+ *
+ * Class WizardImportSheetCommand
+ * @package Larrock\ComponentWizard\Commands
+ */
 class WizardImportSheetCommand extends Command
 {
     /**
@@ -12,7 +19,7 @@ class WizardImportSheetCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx}';
+    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx} {--sleep= : sleep process in seconds after 1s}';
 
     /**
      * The console command description.
@@ -38,11 +45,14 @@ class WizardImportSheetCommand extends Command
      */
     public function handle()
     {
-        $sheet = $this->option('sheet');
+        $sheet = (int)$this->option('sheet');
         $adminWizard = new AdminWizard();
-        $data = \Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
+        $data = \Cache::remember('ImportSheet'. $sheet, 1440, function() use ($sheet, $adminWizard){
+            return \Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
+        });
+
         $bar = $this->output->createProgressBar(count($data));
-        $adminWizard->artisanSheetImport($sheet, $bar);
+        $adminWizard->artisanSheetImport($sheet, $bar, $data, $this->option('sleep'));
         $bar->finish();
         $this->info('Sheet #'. $sheet .' successful imported.');
     }

@@ -6,6 +6,12 @@ use Illuminate\Console\Command;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
 use Excel;
 
+/**
+ * Запуск импорта каталога
+ *
+ * Class WizardImportCommand
+ * @package Larrock\ComponentWizard\Commands
+ */
 class WizardImportCommand extends Command
 {
     /**
@@ -13,7 +19,7 @@ class WizardImportCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:import';
+    protected $signature = 'wizard:import {--sleep= : sleep process in seconds after 1s}';
 
     /**
      * The console command description.
@@ -39,7 +45,13 @@ class WizardImportCommand extends Command
      */
     public function handle()
     {
-        $this->call('wizard:clear');
+        $sleep = $this->option('sleep');
+        $options = [];
+        if($sleep && $sleep > 0){
+            $options = ['--sleep' => $sleep];
+        }
+
+        $this->call('wizard:clear', $options);
 
         if ($this->confirm('Start Import?')) {
             $this->call('cache:clear');
@@ -50,7 +62,11 @@ class WizardImportCommand extends Command
 
             foreach ($data as $key => $sheet){
                 $this->line('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
-                $this->call('wizard:sheet', ['--sheet' => $key]);
+                $options = ['--sheet' => $key];
+                if($sleep && $sleep > 0){
+                    $options = ['--sheet' => $key, '--sleep' => $sleep];
+                }
+                $this->call('wizard:sheet', $options);
             }
             $this->info('SUCCESS! Import ended');
             $this->call('cache:clear');
