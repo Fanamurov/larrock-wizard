@@ -242,7 +242,27 @@ class AdminWizard
         if($request->has('cost')){
             $catalog->cost = str_replace(',', '.', $catalog->cost);
         }
-        $catalog->url = str_slug($catalog->title) .'-'. $request->get('current_category') .'-'. $catalog->cost .'-'. random_int(0,9999);
+        $catalog->url = str_slug($catalog->title) .'-'. $request->get('current_category');
+
+        if(strlen($catalog->url) > 120){
+            $catalog->url = str_limit($catalog->url, 120);
+        }
+
+        //Проверяем совпадение по url-товаров
+        $search_match = \Cache::remember(sha1('searchMatch-'. $catalog->url), 1440, function() use ($catalog){
+            return LarrockCatalog::getModel()->whereUrl($catalog->url)->first();
+        });
+        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereTitle($catalog->title)->latest('id')->first()){
+            //Нашли совпадение по базе, ищем наибольший постфикс и делаем +1
+            $explode = explode('-c', $find_tovar->url);
+            if(array_key_exists(1, $explode)){
+                $index = (int)$explode[1] +1;
+                $catalog->url = $catalog->url .'-c'. $index;
+            }else{
+                $catalog->url .= '-c1';
+            }
+        }
+
         $catalog->position = 0;
         $catalog->active = 1;
         if(Auth::user()){
