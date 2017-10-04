@@ -79,7 +79,9 @@ class AdminWizard
 
                 $request->merge($data);
                 $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
-                $import_tovar = $this->importTovar($request);
+                if(isset($request->title) && !empty($request->title)){
+                    $import_tovar = $this->importTovar($request);
+                }
             }
             if($bar){
                 $bar->advance();
@@ -123,6 +125,7 @@ class AdminWizard
         }
 
         $category = LarrockCategory::getModel()->fill($data);
+
         $category->component = 'catalog';
 
         if($category->level === 1){
@@ -170,6 +173,11 @@ class AdminWizard
         //Проверяем, вносили ли мы уже эту категорию в базу
         if($oldCategory = LarrockCategory::getModel()->whereUrl($category->url)->first()){
             return ['category_id' => $oldCategory->id, 'category_level' => $oldCategory->level, 'category_title' => $oldCategory->title];
+        }
+
+        if(empty($category->title)){
+            \Log::error('Импорт раздела не прошел', $category);
+            return abort(500, 'Раздел не был добавлен');
         }
 
         if($save = $category->save()){
@@ -239,6 +247,7 @@ class AdminWizard
             }
         }
         $catalog = LarrockCatalog::getModel()->fill($request->all());
+
         if($request->has('cost')){
             $catalog->cost = str_replace(',', '.', $catalog->cost);
         }
@@ -271,6 +280,11 @@ class AdminWizard
             $catalog->user_id = NULL;
         }
 
+        if(empty($catalog->title)){
+            \Log::error('Импорт товара не прошел', $catalog);
+            return abort(500, 'Товар не был добавлен');
+        }
+
         if($save = $catalog->save()){
             $catalog->get_category()->attach($request->get('current_category'));
             if($request->has('foto') && $request->get('foto', '') !== ''){
@@ -283,7 +297,7 @@ class AdminWizard
                 'category_title' => $request->get('current_title'),
                 'foto' => ['status' => 'notice', 'message' => 'Колонка фото не передана']];
         }
-        return abort(500, 'Раздел не был добавлен');
+        return abort(500, 'Товар не был добавлен');
     }
 
 
