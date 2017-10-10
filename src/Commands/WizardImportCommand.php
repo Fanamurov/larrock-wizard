@@ -19,7 +19,7 @@ class WizardImportCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:import {--sleep= : sleep process in seconds after 1s}';
+    protected $signature = 'wizard:import {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs}';
 
     /**
      * The console command description.
@@ -46,30 +46,42 @@ class WizardImportCommand extends Command
     public function handle()
     {
         $sleep = $this->option('sleep');
+        $silence = $this->option('silence');
         $options = [];
         if($sleep && $sleep > 0){
-            $options = ['--sleep' => $sleep];
+            $options['--sleep'] = $sleep;
+        }
+        if($silence > 0){
+            $options['--silence'] = $silence;
         }
 
         $this->call('wizard:clear', $options);
 
-        if ($this->confirm('Start Import?')) {
-            $this->call('cache:clear');
-            $adminWizard = new AdminWizard();
-            $data = Excel::load($adminWizard->findXLSX(), function($reader) {
-                $reader->takeRows(1);
-            })->get();
-
-            foreach ($data as $key => $sheet){
-                $this->line('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
-                $options = ['--sheet' => $key];
-                if($sleep && $sleep > 0){
-                    $options = ['--sheet' => $key, '--sleep' => $sleep];
-                }
-                $this->call('wizard:sheet', $options);
+        if($silence > 0){
+            $this->process($options);
+        }else{
+            if ($this->confirm('Start Import?')) {
+                $this->process($options);
             }
-            $this->info('SUCCESS! Import ended');
-            $this->call('cache:clear');
         }
+    }
+
+    protected function process($options)
+    {
+        $this->call('cache:clear');
+        $adminWizard = new AdminWizard();
+        $data = Excel::load($adminWizard->findXLSX(), function($reader) {
+            $reader->takeRows(1);
+        })->get();
+
+        foreach ($data as $key => $sheet){
+            \Log::info('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
+            $this->line('Start import '. $adminWizard->findXLSX() .' sheet #'. $key);
+            $options['--sheet'] = $key;
+            $this->call('wizard:sheet', $options);
+        }
+        \Log::info('SUCCESS! Import ended');
+        $this->info('SUCCESS! Import ended');
+        $this->call('cache:clear');
     }
 }

@@ -19,7 +19,7 @@ class WizardImportSheetCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx} {--sleep= : sleep process in seconds after 1s}';
+    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx} {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs}';
 
     /**
      * The console command description.
@@ -54,6 +54,7 @@ class WizardImportSheetCommand extends Command
         $bar = $this->output->createProgressBar(count($data));
         $adminWizard->artisanSheetImport($sheet, $bar, $data, $this->option('sleep'));
         $bar->finish();
+        \Log::info('Sheet #'. $sheet .' successful imported.');
         $this->info('Sheet #'. $sheet .' successful imported.');
     }
 }
