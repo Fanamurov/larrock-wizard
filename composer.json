@@ -14,18 +14,11 @@
             "Larrock\\ComponentWizard\\": "src"
         }
     },
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/Fanamurov/L5GeneratorsLarrock.git"
-        }
-    ],
     "require": {
         "fanamurov/larrock-core": "^0.2",
         "fanamurov/larrock-catalog": "^0.2",
         "fanamurov/larrock-category": "^0.2",
-        "maatwebsite/excel": "^2.1",
-        "laracasts/generators": "dev-master"
+        "maatwebsite/excel": "^2.1"
     },
     "extra": {
         "laravel": {

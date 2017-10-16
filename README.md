@@ -1,3 +1,4 @@
+
 Import .xlsx price to catalog component for larrockCMS
 
 ***
@@ -13,26 +14,39 @@ Import .xlsx price to catalog component for larrockCMS
 ## INSTALL
 
 1. Install larrock-wizard
-  ```sh
-  composer require fanamurov/larrock-wizard
+```sh
+   composer require fanamurov/larrock-wizard
   ```
 
-2.Add service providers (config/app.php)
-```php
-//http://www.maatwebsite.nl/laravel-excel/docs/import
-Maatwebsite\Excel\ExcelServiceProvider::class,
-//https://github.com/laracasts/Laravel-5-Generators-Extended
-\Laracasts\Generators\GeneratorsServiceProvider::class,
-```
-Add alias servise providers
-```php
-'Excel'     => Maatwebsite\Excel\Facades\Excel::class,
-```
+2. Install laracasts/generators fork (laravel 5.5 support). Update main composer.js
+  ``` 
+  "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/Fanamurov/L5GeneratorsLarrock.git"
+        }
+    ],
+    "require": {
+        "laracasts/generators": "dev-master"
+    },
+  ```
 
-3.Publish vendor files
-```sh
-$ php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider"
-```
+3. Add service providers (config/app.php)
+  ```php
+  //http://www.maatwebsite.nl/laravel-excel/docs/import
+  Maatwebsite\Excel\ExcelServiceProvider::class,
+  //https://github.com/laracasts/Laravel-5-Generators-Extended
+  \Laracasts\Generators\GeneratorsServiceProvider::class,
+  ```
+  Add alias servise providers
+  ```php
+  'Excel'     => Maatwebsite\Excel\Facades\Excel::class,
+  ```
+
+4. Publish vendor files
+  ```sh
+  $ php artisan vendor:publish --provider="Maatwebsite\Excel\ExcelServiceProvider"
+  ```
 
 
 ## START
