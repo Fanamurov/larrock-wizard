@@ -25,7 +25,7 @@
         "fanamurov/larrock-catalog": "^0.2",
         "fanamurov/larrock-category": "^0.2",
         "maatwebsite/excel": "^2.1",
-        "laracasts/generators": "dev-master"
+        "laracasts/generators": "^1.2",
     },
     "extra": {
         "laravel": {
