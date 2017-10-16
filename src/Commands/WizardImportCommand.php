@@ -19,7 +19,7 @@ class WizardImportCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:import {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs}';
+    protected $signature = 'wizard:import {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs} {--withoutimage= : dont reload images}';
 
     /**
      * The console command description.
@@ -29,24 +29,13 @@ class WizardImportCommand extends Command
     protected $description = 'Import .xlsx file to catalog';
 
     /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
-
-    /**
      * Execute the console command.
-     *
-     * @return mixed
      */
     public function handle()
     {
         $sleep = $this->option('sleep');
         $silence = $this->option('silence');
+        $withoutimage = $this->option('withoutimage');
         $options = [];
         if($sleep && $sleep > 0){
             $options['--sleep'] = $sleep;
@@ -54,6 +43,7 @@ class WizardImportCommand extends Command
         if($silence > 0){
             $options['--silence'] = $silence;
         }
+        $options['--withoutimage'] = $withoutimage;
 
         $this->call('wizard:clear', $options);
 

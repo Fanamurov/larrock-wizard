@@ -19,7 +19,7 @@ class WizardImportSheetCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx} {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs}';
+    protected $signature = 'wizard:sheet {--sheet= : ID sheet .xlsx} {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs} {--withoutimage= : dont reload images}';
 
     /**
      * The console command description.
@@ -27,16 +27,6 @@ class WizardImportSheetCommand extends Command
      * @var string
      */
     protected $description = 'Import sheet .xlsx to catalog';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * Execute the console command.
@@ -52,7 +42,7 @@ class WizardImportSheetCommand extends Command
         });
 
         $bar = $this->output->createProgressBar(count($data));
-        $adminWizard->artisanSheetImport($sheet, $bar, $data, $this->option('sleep'));
+        $adminWizard->artisanSheetImport($sheet, $bar, $data, $this->option('sleep'), $this->option('withoutimage'));
         $bar->finish();
         \Log::info('Sheet #'. $sheet .' successful imported.');
         $this->info('Sheet #'. $sheet .' successful imported.');

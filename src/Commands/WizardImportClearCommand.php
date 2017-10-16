@@ -3,9 +3,11 @@
 namespace Larrock\ComponentWizard\Commands;
 
 use Illuminate\Console\Command;
+use Larrock\ComponentCatalog\Facades\LarrockCatalog;
 use Larrock\ComponentCatalog\Models\Catalog;
+use Larrock\ComponentCategory\Facades\LarrockCategory;
 use Larrock\ComponentCategory\Models\Category;
-use Larrock\ComponentWizard\Helpers\AdminWizard;
+use Spatie\MediaLibrary\Media;
 
 /**
  * Очистка данных каталога перед импортом
@@ -20,7 +22,7 @@ class WizardImportClearCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'wizard:clear {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs}';
+    protected $signature = 'wizard:clear {--sleep= : sleep process in seconds after 1s} {--silence= : dont show dialogs} {--withoutimage= : dont reload images}';
 
     /**
      * The console command description.
@@ -28,16 +30,6 @@ class WizardImportClearCommand extends Command
      * @var string
      */
     protected $description = 'Clear catalog';
-
-    /**
-     * Create a new command instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        parent::__construct();
-    }
 
     /**
      * Execute the console command.
@@ -60,19 +52,19 @@ class WizardImportClearCommand extends Command
     public function process()
     {
         $sleep = $this->option('sleep');
-        $adminWizard = new AdminWizard();
+        $withoutimage = $this->option('withoutimage');
+
         \Log::info('Start catalog items deleting');
         $this->info('Start catalog items deleting');
 
-        //ONLY ASIABUS
-        if(env('APP_ENV') !== 'local'){
-            $sleep = 10;
-        }
-
         //Копия метода $adminWizard->deleteCatalog(), здесь добавлен прогресс бар на вывод
-        $delete = Catalog::all();
+        $delete = LarrockCatalog::getModel()->all();
         $bar = $this->output->createProgressBar(count($delete));
         $start = microtime(true);
+
+        if($withoutimage){
+            Media::whereModelType(LarrockCatalog::getModelName())->delete();
+        }
 
         foreach($delete as $delete_value){
             if($sleep && $sleep > 0){
@@ -83,8 +75,12 @@ class WizardImportClearCommand extends Command
                 }
             }
             //Очищаем связи с фото
-            $find_item = Catalog::find($delete_value->id);
-            $find_item->clearMediaCollection();
+            $find_item = LarrockCatalog::getModel()->find($delete_value->id);
+
+            if( !$withoutimage){
+                $find_item->clearMediaCollection('images');
+            }
+
             $delete_value->delete();
             if($delete_value->get_category()->count() > 0){
                 $delete_value->get_category()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
@@ -99,8 +95,12 @@ class WizardImportClearCommand extends Command
         $this->info('Start catalog categories deleting');
 
         //Копия метода $adminWizard->deleteCategoryCatalog(), здесь добавлен прогресс бар на вывод
-        $delete = Category::whereComponent('catalog')->get();
+        $delete = LarrockCategory::getModel()->whereComponent('catalog')->get();
         $bar = $this->output->createProgressBar(count($delete));
+
+        if($withoutimage){
+            Media::whereModelType(LarrockCategory::getModelName())->delete();
+        }
 
         foreach($delete as $delete_value){
             if($sleep && $sleep > 0){
@@ -110,8 +110,12 @@ class WizardImportClearCommand extends Command
                     $start = microtime(true);
                 }
             }
-            $find_item = Category::find($delete_value->id);
-            $find_item->clearMediaCollection();
+            $find_item = LarrockCategory::getModel()->find($delete_value->id);
+
+            if( !$withoutimage){
+                $find_item->clearMediaCollection('images');
+            }
+
             $delete_value->delete();
             $bar->advance();
         }

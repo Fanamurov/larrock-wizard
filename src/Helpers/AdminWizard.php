@@ -9,6 +9,7 @@ use Larrock\Core\Helpers\Tree;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentCatalog\Facades\LarrockCatalog;
 use Larrock\ComponentCategory\Facades\LarrockCategory;
+use Spatie\MediaLibrary\Media;
 
 class AdminWizard
 {
@@ -28,17 +29,15 @@ class AdminWizard
      * @param null  $bar            Прогресс бар для artisan
      * @param null  $sheet_data     Данные из xls
      * @param null  $sleep          Сколько секунд ждать после 1 секунды выполнения (sweb привет)
+     * @param null  $withoutimage   Не перегенерировать фотографии
      */
-    public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL)
+    public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL, $withoutimage = NULL)
     {
         if($sheet_data){
             $data = $sheet_data;
         }else{
             $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
         }
-
-        $rows = $this->rows;
-        $fillable = $this->getFillableRows();
 
         $current_category = 'undefined';
         $current_level = 'undefined';
@@ -59,7 +58,7 @@ class AdminWizard
                     $request->merge($data_value->toArray());
                     $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
 
-                    $import_category = $this->importCategory($category, $request);
+                    $import_category = $this->importCategory($category, $request, $withoutimage);
                     $current_category = $import_category['category_id'];
                     $current_level = $import_category['category_level'];
                 }
@@ -80,7 +79,7 @@ class AdminWizard
                 $request->merge($data);
                 $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
                 if(isset($request->title) && !empty($request->title)){
-                    $import_tovar = $this->importTovar($request);
+                    $this->importTovar($request, $withoutimage);
                 }
             }
             if($bar){
@@ -111,9 +110,10 @@ class AdminWizard
      *
      * @param $data
      * @param Request $request
+     * @param null $withoutimage
      * @return array
      */
-    public function importCategory($data, Request $request)
+    public function importCategory($data, Request $request, $withoutimage = NULL)
     {
         $prev_category = $request->get('current_category');
         $prev_level = $request->get('current_level');
@@ -182,7 +182,7 @@ class AdminWizard
 
         if($save = $category->save()){
             if($request->has('foto') && $request->get('foto', '') !== ''){
-                $add_foto = $this->add_images($category->id, $request->get('foto'), 'category');
+                $add_foto = $this->add_images($category->id, $request->get('foto'), 'category', $withoutimage);
                 return ['category_id' => $category->id, 'category_level' => $category->level,
                     'category_title' => $category->title,
                     'foto' => $add_foto];
@@ -201,12 +201,30 @@ class AdminWizard
      * @param $id_content
      * @param $image_name
      * @param $type
+     * @param $withoutimage
      * @return array
      */
-    public function add_images($id_content, $image_name, $type)
+    public function add_images($id_content, $image_name, $type, $withoutimage = NULL)
     {
         if( !$id_content){
             abort(404, 'Не передан id_content');
+        }
+        if($withoutimage && !empty($image_name)){
+            $model_type = LarrockCatalog::getModelName();
+            if($type === 'category'){
+                $model_type = LarrockCategory::getModelName();
+            }
+            $explode_name = explode('.', $image_name);
+            $name = str_replace('.'. array_last($explode_name), '', $image_name);
+            $new_media = new Media();
+            $new_media['model_id'] = $id_content;
+            $new_media['model_type'] = $model_type;
+            $new_media['collection_name'] = 'images';
+            $new_media['name'] = $name;
+            $new_media['file_name'] = $image_name;
+            $new_media['size'] = $image_name;
+            $new_media->save();
+            return ['status' => 'notice', 'message' => 'Фото не обрабатываются'];
         }
         if( !empty($image_name)){
             //Ищем указание нескольких фото
@@ -219,7 +237,7 @@ class AdminWizard
                     }elseif($type === 'catalog'){
                         $content = LarrockCatalog::getModel()->findOrFail($id_content);
                     }
-                    if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaLibrary('images')){
+                    if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaCollection('images')){
                         return ['status' => 'error', 'message' => 'Фото '. $image. ' найдено, но не обработано'];
                     }
                 }else{
@@ -239,7 +257,7 @@ class AdminWizard
      * @param Request $request
      * @return array
      */
-    public function importTovar(Request $request)
+    public function importTovar(Request $request, $withoutimage = NULL)
     {
         foreach($this->rows as $key => $row){
             if($request->has($key) && $row['db'] !== 'title'){
@@ -261,14 +279,16 @@ class AdminWizard
         $search_match = \Cache::remember(sha1('searchMatch-'. $catalog->url), 1440, function() use ($catalog){
             return LarrockCatalog::getModel()->whereUrl($catalog->url)->first();
         });
-        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereTitle($catalog->title)->latest('id')->first()){
+
+        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereUrl($catalog->url)->latest('id')->first()){
             //Нашли совпадение по базе, ищем наибольший постфикс и делаем +1
-            $explode = explode('-c', $find_tovar->url);
+            $explode = explode('-ccc', $find_tovar->url);
             if(array_key_exists(1, $explode)){
+                echo $explode[1];
                 $index = (int)$explode[1] +1;
-                $catalog->url = $catalog->url .'-c'. $index;
+                $catalog->url = $catalog->url .'-ccc'. $index;
             }else{
-                $catalog->url .= '-c1';
+                $catalog->url .= '-ccc1';
             }
         }
 
@@ -288,7 +308,7 @@ class AdminWizard
         if($save = $catalog->save()){
             $catalog->get_category()->attach($request->get('current_category'));
             if($request->has('foto') && $request->get('foto', '') !== ''){
-                $add_foto = $this->add_images($catalog->id, $request->get('foto'), 'catalog');
+                $add_foto = $this->add_images($catalog->id, $request->get('foto'), 'catalog', $withoutimage);
                 return ['category_id' => $request->get('current_category'), 'category_level' => $request->get('current_level'),
                     'category_title' => $request->get('current_title'),
                     'foto' => $add_foto];
@@ -347,7 +367,7 @@ class AdminWizard
         foreach($delete as $delete_value){
             //Очищаем связи с фото
             if($find_item = LarrockCatalog::getModel()->find($delete_value->id)){
-                $find_item->clearMediaCollection();
+                $find_item->clearMediaCollection('images');
             }
             $delete_value->delete();
             if($delete_value->get_category()->count() > 0){
@@ -370,7 +390,7 @@ class AdminWizard
         foreach($delete as $delete_value){
             //Очищаем связи с фото
             if($find_item = LarrockCategory::getModel()->find($delete_value->id)){
-                $find_item->clearMediaCollection();
+                $find_item->clearMediaCollection('images');
             }
 
             $delete_value->delete();
@@ -391,9 +411,9 @@ class AdminWizard
                 if($file !== '.' && $file !== '..'){
                     $explode_file = explode('.', $file);
                     if((array_get($explode_file, '1', '') === 'png'
-                            OR array_get($explode_file, '1', '') === 'jpg'
-                            OR array_get($explode_file, '1', '') === 'jpeg'
-                            OR array_get($explode_file, '1', '') === 'gif')
+                            || array_get($explode_file, '1', '') === 'jpg'
+                            || array_get($explode_file, '1', '') === 'jpeg'
+                            || array_get($explode_file, '1', '') === 'gif')
                         && !strpos($file, '$')){
                         $images[] = $file;
                     }
