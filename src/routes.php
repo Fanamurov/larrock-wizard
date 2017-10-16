@@ -34,7 +34,4 @@ Route::group(['prefix' => 'admin', 'middleware'=> ['web', 'level:2', 'LarrockAdm
     Route::get('/wizard/rollbackMigration', [
         'as' => 'admin.wizard.rollbackMigration', 'uses' => AdminWizardController::class .'@rollbackMigration'
     ]);
-    Route::get('/wizard/help', [
-        'as' => 'admin.wizard.help', 'uses' => AdminWizardController::class .'@help'
-    ]);
 });

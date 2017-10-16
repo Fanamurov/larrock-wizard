@@ -5,7 +5,7 @@
     <div class="container-head uk-margin-bottom">
         <div class="add-panel uk-margin-bottom uk-text-right">
             <a class="uk-button" href="#modal-help" data-uk-modal="{target:'#modal-help'}"><i class="uk-icon-question"></i></a>
-            <a class="uk-button uk-button-primary" href="/admin/{{ $app->name }}/help">Помощь</a>
+            <a class="uk-button uk-button-primary" target="_blank" href="https://github.com/Fanamurov/larrock-core/wiki/Прайс-для-импорта-каталога-на-сайт">Помощь</a>
             <a class="uk-button uk-button-primary" href="/admin/{{ $app->name }}/clear/manual">Ручная очистка каталога</a>
             <button type="button" class="start_import uk-button uk-button-success" @if( !isset($xlsx) || !isset($data)) disabled @endif>Старт импорта</button>
         </div>

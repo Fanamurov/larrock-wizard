@@ -2,7 +2,6 @@
 
 namespace Larrock\ComponentWizard;
 
-use Alert;
 use Breadcrumbs;
 use Cache;
 use Excel;
@@ -50,7 +49,7 @@ class AdminWizardController extends Controller
             $data['xlsx'] = $adminWizard->findXLSX();
             $data['fillable'] = $adminWizard->getFillableRows();
         }else{
-            Alert::add('errorAdmin', '.xlsx-файл отсутствует в директории /resources/wizard')->flash();
+            \Session::push('message.danger', '.xlsx-файл отсутствует в директории /resources/wizard');
             $data = [];
         }
 
@@ -62,17 +61,6 @@ class AdminWizardController extends Controller
         Cache::forget('scanImageDir');
 
         return view('larrock::admin.wizard.parse', $data);
-    }
-
-    public function help()
-    {
-        Breadcrumbs::register('admin.wizard.help', function($breadcrumbs)
-        {
-            $breadcrumbs->parent('admin.wizard.index');
-            $breadcrumbs->push('Помощь');
-        });
-
-        return view('larrock::admin.wizard.help');
     }
 
 
@@ -94,10 +82,9 @@ class AdminWizardController extends Controller
         });
         if(count($data['data']) > 0){
             return view('larrock::admin.wizard.sheet', $data);
-        }else{
-            Alert::add('errorAdmin', 'В листе #'. $sheet .' не найдено данных');
-            return response('В листе #'. $sheet .' не найдено данных');
         }
+        \Session::push('message.danger', 'В листе #'. $sheet .' не найдено данных');
+        return response('В листе #'. $sheet .' не найдено данных');
     }
 
 
@@ -133,13 +120,13 @@ class AdminWizardController extends Controller
         \Cache::flush();
         if($clearCatalog === TRUE && $clearCategory === TRUE){
             if($manual){
-                Alert::add('successAdmin', 'Каталог очищен')->flash();
+                \Session::push('message.success', 'Каталог очищен');
                 return back()->withInput();
             }
             return response()->json('Товары и разделы каталога удалены');
         }
         if($manual){
-            Alert::add('successAdmin', 'Ошибка: каталог не очищен')->flash();
+            \Session::push('message.success', 'Ошибка: каталог не очищен');
             return back()->withInput();
         }
         return response()->json('Каталог не очищен', 500);
@@ -158,10 +145,8 @@ class AdminWizardController extends Controller
         if($request->get('cell', '') !== '' && $request->has('value') && $request->get('sheet', '') !== ''){
             Excel::load($adminWizard->findXLSX(), function($file) use ($request) {
                 $file->setActiveSheetIndex($request->get('sheet'));
-                //$sheet->setCellValue(5, 'Test String');
                 $sheet = $file->getActiveSheet();
                 $sheet->setCellValue($request->get('cell'), $request->get('value'));
-                //dd($sheet->getCellValue('C9'));
             })->store('xlsx', resource_path('wizard'));
             return response()->json(['status' => 'success', 'message' => 'Ячейка '. $request->get('cell', 'UNDEFINED') .' перезаписана на значение '. $request->get('value')]);
         }
@@ -200,9 +185,9 @@ class AdminWizardController extends Controller
             $data->value = serialize($config);
         }
         if($data->save()){
-            Alert::add('successAdmin', 'Настройки полей импорта сохранены')->flash();
+            \Session::push('message.success', 'Настройки полей импорта сохранены');
         }else{
-            Alert::add('errorAdmin', 'Настройки полей импорта не сохранены')->flash();
+            \Session::push('message.danger', 'Настройки полей импорта не сохранены');
         }
         return back()->withInput();
     }
@@ -223,19 +208,19 @@ class AdminWizardController extends Controller
         }
 
         if( !$request->file('xlsx')){
-            Alert::add('errorAdmin', 'Файл не передан')->flash();
+            \Session::push('message.danger', 'Файл не передан');
             return back()->withInput();
         }
         $extension = $request->file('xlsx')->getClientOriginalExtension();
         if($extension === 'xlsx'){
             $uniqueFileName = $request->file('xlsx')->getClientOriginalName();
             if($request->file('xlsx')->move(resource_path('wizard/'), $uniqueFileName)){
-                Alert::add('successAdmin', 'Файл прайса '. $uniqueFileName .' успешно загружен')->flash();
+                \Session::push('message.success', 'Файл прайса '. $uniqueFileName .' успешно загружен');
             }else{
-                Alert::add('errorAdmin', 'Файл прайса '. $uniqueFileName .' не был загружен')->flash();
+                \Session::push('message.danger', 'Файл прайса '. $uniqueFileName .' не был загружен');
             }
         }else{
-            Alert::add('errorAdmin', 'Загружаемый формат файла .'. $extension .' отличается от требуемого .xlsx')->flash();
+            \Session::push('message.danger', 'Загружаемый формат файла .'. $extension .' отличается от требуемого .xlsx');
         }
         return back()->withInput();
     }
@@ -254,7 +239,7 @@ class AdminWizardController extends Controller
         }
 
         if( !$request->file('images')){
-            Alert::add('errorAdmin', 'Файлы не передан')->flash();
+            \Session::push('message.danger', 'Файлы не передан');
             return back()->withInput();
         }
 
@@ -265,12 +250,12 @@ class AdminWizardController extends Controller
             if(in_array($extension, $allow_extensions, TRUE)){
                 $uniqueFileName = $image->getClientOriginalName();
                 if($image->move(public_path('media/wizard'), $uniqueFileName)){
-                    Alert::add('successAdmin', 'Фото '. $uniqueFileName .' успешно загружено')->flash();
+                    \Session::push('message.success', 'Фото '. $uniqueFileName .' успешно загружено');
                 }else{
-                    Alert::add('errorAdmin', 'Фото '. $uniqueFileName .' не был загружено')->flash();
+                    \Session::push('message.danger', 'Фото '. $uniqueFileName .' не был загружено');
                 }
             }else{
-                Alert::add('errorAdmin', 'Загружаемый формат файла '. $image->getClientOriginalName() .' отличается от требуемых (jpg, jpeg, gif, png)')->flash();
+                \Session::push('message.danger', 'Загружаемый формат файла '. $image->getClientOriginalName() .' отличается от требуемых (jpg, jpeg, gif, png)');
             }
         }
 
