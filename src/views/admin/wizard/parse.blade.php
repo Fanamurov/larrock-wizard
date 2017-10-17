@@ -57,7 +57,7 @@
     <br/>
 
     @if(isset($xlsx) || isset($data))
-        <h3>Файл прайса: <small><a target="_blank" href="{{ $xlsx->getPathname() }}">{{ $xlsx->getFilename() }}</a></small></h3>
+        <h2>Файл прайса: <small><a target="_blank" href="{{ $xlsx->getPathname() }}">{{ $xlsx->getFilename() }}</a></small></h2>
         <div class="uk-margin-large-bottom" id="ibox-wizard">
             <ul class="uk-tab" data-uk-tab="{connect:'#tab-content'}">
                 @if(count($data) > 1)

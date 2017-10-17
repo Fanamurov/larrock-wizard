@@ -25,9 +25,6 @@ class AdminWizardController extends Controller
         $this->config = $Component->shareConfig();
 
         \Config::set('breadcrumbs.view', 'larrock::admin.breadcrumb.breadcrumb');
-        Breadcrumbs::register('admin.'. $this->config->name .'.index', function($breadcrumbs){
-            $breadcrumbs->push($this->config->title, route('admin.wizard.help'));
-        });
     }
 
 
@@ -55,7 +52,7 @@ class AdminWizardController extends Controller
 
         Breadcrumbs::register('admin.wizard.result', function($breadcrumbs)
         {
-            $breadcrumbs->parent('admin.wizard.index');
+            $breadcrumbs->push('Wizard - импорт каталога');
         });
 
         Cache::forget('scanImageDir');
@@ -76,6 +73,17 @@ class AdminWizardController extends Controller
         $data['data'] = Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
         $data['rows'] = $adminWizard->rows;
         $data['fillable'] = $adminWizard->getFillableRows();
+
+        foreach ($data['data']->getHeading() as $heading){
+            if( !array_key_exists($heading, $data['rows'])){
+                $data['rows'][$heading]['db'] = null;
+                $data['rows'][$heading]['slug'] = null;
+                $data['rows'][$heading]['template'] = null;
+                $data['rows'][$heading]['filters'] = null;
+                $data['rows'][$heading]['admin'] = null;
+            }
+        }
+
         $data['sheet'] = $sheet;
         $data['images'] = Cache::remember('scanImageDir', 1440, function() use ($adminWizard){
             return $adminWizard->scanImageDir();
