@@ -277,7 +277,7 @@ class AdminWizard
         if($request->has('cost')){
             $catalog->cost = str_replace(',', '.', $catalog->cost);
         }
-        $catalog->url = str_slug($catalog->title) .'-'. $request->get('current_category');
+        $catalog->url = str_slug($catalog->title);
 
         if(strlen($catalog->url) > 120){
             $catalog->url = str_limit($catalog->url, 120);
@@ -288,7 +288,7 @@ class AdminWizard
             return LarrockCatalog::getModel()->whereUrl($catalog->url)->first();
         });
 
-        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereUrl($catalog->url)->latest('id')->first()){
+        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereTitle($catalog->title)->latest('id')->first()){
             //Нашли совпадение по базе, ищем наибольший постфикс и делаем +1
             $explode = explode('-ccc', $find_tovar->url);
             if(array_key_exists(1, $explode)){
