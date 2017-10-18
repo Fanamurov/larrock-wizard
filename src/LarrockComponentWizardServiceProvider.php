@@ -22,7 +22,8 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
 
         $this->publishes([
             __DIR__.'/lang' => resource_path('lang/vendor/larrock'),
-            __DIR__.'/views' => base_path('resources/views/vendor/larrock')
+            __DIR__.'/views' => base_path('resources/views/vendor/larrock'),
+            __DIR__.'/config/larrock-wizard.php' => config_path('larrock-wizard.php'),
         ]);
     }
 
@@ -43,5 +44,7 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
             'command.wizard:sheet',
             'command.wizard:clear',
         ]);
+
+        $this->mergeConfigFrom( __DIR__.'/config/larrock-wizard.php', 'larrock-wizard');
     }
 }
