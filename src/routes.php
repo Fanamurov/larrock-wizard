@@ -2,7 +2,7 @@
 
 use Larrock\ComponentWizard\AdminWizardController;
 
-Route::group(['prefix' => 'admin', 'middleware'=> ['web', 'level:2', 'LarrockAdminMenu', 'SaveAdminPluginsData']], function(){
+Route::group(['prefix' => 'admin', 'middleware'=> ['web', 'level:2', 'LarrockAdminMenu', 'SaveAdminPluginsData', 'SiteSearchAdmin']], function(){
     Route::get('/wizard', [
         'as' => 'admin.wizard', 'uses' => AdminWizardController::class .'@index'
     ]);
