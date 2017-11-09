@@ -7,7 +7,7 @@ use Cache;
 use Excel;
 use File;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Illuminate\Routing\Controller;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
 
