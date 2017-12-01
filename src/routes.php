@@ -2,7 +2,7 @@
 
 use Larrock\ComponentWizard\AdminWizardController;
 
-Route::group(['prefix' => 'admin', 'middleware'=> ['web', 'level:2', 'LarrockAdminMenu', 'SaveAdminPluginsData', 'SiteSearchAdmin']], function(){
+Route::group(['prefix' => 'admin'], function(){
     Route::get('/wizard', [
         'as' => 'admin.wizard', 'uses' => AdminWizardController::class .'@index'
     ]);
@@ -34,4 +34,8 @@ Route::group(['prefix' => 'admin', 'middleware'=> ['web', 'level:2', 'LarrockAdm
     Route::get('/wizard/rollbackMigration', [
         'as' => 'admin.wizard.rollbackMigration', 'uses' => AdminWizardController::class .'@rollbackMigration'
     ]);
+});
+
+Breadcrumbs::register('admin.wizard.result', function($breadcrumbs){
+    $breadcrumbs->push('Wizard - импорт каталога');
 });

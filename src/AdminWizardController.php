@@ -2,7 +2,6 @@
 
 namespace Larrock\ComponentWizard;
 
-use Breadcrumbs;
 use Cache;
 use Excel;
 use File;
@@ -21,6 +20,7 @@ class AdminWizardController extends Controller
 
     public function __construct(AdminWizard $adminWizard)
     {
+        $this->middleware(\LarrockPages::combineAdminMiddlewares());
         $Component = new WizardComponent();
         $this->config = $Component->shareConfig();
 
@@ -49,12 +49,6 @@ class AdminWizardController extends Controller
             \Session::push('message.danger', '.xlsx-файл отсутствует в директории /resources/wizard');
             $data = [];
         }
-
-        Breadcrumbs::register('admin.wizard.result', function($breadcrumbs)
-        {
-            $breadcrumbs->push('Wizard - импорт каталога');
-        });
-
         Cache::forget('scanImageDir');
 
         return view('larrock::admin.wizard.parse', $data);
