@@ -418,11 +418,8 @@ class AdminWizard
             while(false !== ($file = readdir($handle))){
                 if($file !== '.' && $file !== '..'){
                     $explode_file = explode('.', $file);
-                    if((array_get($explode_file, '1', '') === 'png'
-                            || array_get($explode_file, '1', '') === 'jpg'
-                            || array_get($explode_file, '1', '') === 'jpeg'
-                            || array_get($explode_file, '1', '') === 'gif')
-                        && !strpos($file, '$')){
+                    $allow_extensions = ['png', 'jpg', 'jpeg', 'gif'];
+                    if(in_array(last($explode_file), $allow_extensions, false)){
                         $images[] = $file;
                     }
                 }

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
+use Larrock\Core\Traits\ShareMethods;
 
 /**
  * Class AdminWizardController
@@ -16,14 +17,16 @@ use Larrock\ComponentWizard\Helpers\AdminWizard;
  */
 class AdminWizardController extends Controller
 {
+    use ShareMethods;
+
     protected $config;
 
     public function __construct(AdminWizard $adminWizard)
     {
+        $this->shareMethods();
         $this->middleware(\LarrockPages::combineAdminMiddlewares());
         $Component = new WizardComponent();
         $this->config = $Component->shareConfig();
-
         \Config::set('breadcrumbs.view', 'larrock::admin.breadcrumb.breadcrumb');
     }
 
