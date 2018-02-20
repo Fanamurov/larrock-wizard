@@ -5,7 +5,7 @@ namespace Larrock\ComponentWizard\Helpers;
 use Auth;
 use Excel;
 use Illuminate\Http\Request;
-use Larrock\Core\Helpers\Tree;
+use Larrock\Core\Helpers\MessageLarrock;
 use Larrock\Core\Models\Config as Model_Config;
 use Larrock\ComponentCatalog\Facades\LarrockCatalog;
 use Larrock\ComponentCategory\Facades\LarrockCategory;
@@ -22,7 +22,7 @@ class AdminWizard
             $this->rows = config('larrock-wizard.rows');
         }
         if($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()){
-            if(is_array($get_config_db->value)){
+            if(\is_array($get_config_db->value)){
                 foreach ($get_config_db->value as $key => $value){
                     $this->rows[$key] = $value;
                 }
@@ -32,12 +32,11 @@ class AdminWizard
 
     /**
      * Запуск импорта через artisan
-     *
-     * @param int   $sheet          Номер листа .xlsx для импорта (начиная с нуля)
-     * @param null  $bar            Прогресс бар для artisan
-     * @param null  $sheet_data     Данные из xls
-     * @param null  $sleep          Сколько секунд ждать после 1 секунды выполнения (sweb привет)
-     * @param null  $withoutimage   Не перегенерировать фотографии
+     * @param int           $sheet          Номер листа .xlsx для импорта (начиная с нуля)
+     * @param null          $bar            Прогресс бар для artisan
+     * @param null|array    $sheet_data     Данные из xls
+     * @param null|int      $sleep          Сколько секунд ждать после 1 секунды выполнения (sweb привет)
+     * @param null|bool     $withoutimage   Не перегенерировать фотографии
      */
     public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL, $withoutimage = NULL)
     {
@@ -115,10 +114,9 @@ class AdminWizard
 
     /**
      * Импорт раздела
-     *
      * @param $data
      * @param Request $request
-     * @param null $withoutimage
+     * @param null|bool $withoutimage
      * @return array
      */
     public function importCategory($data, Request $request, $withoutimage = NULL)
@@ -149,7 +147,7 @@ class AdminWizard
             }
         }
 
-        $slug_parent = \Cache::remember('getSlugWizard'. $category->parent, 1440, function() use ($category){
+        $slug_parent = \Cache::rememberForever('getSlugWizard'. $category->parent, function() use ($category){
             if($getParentSearch = LarrockCategory::getModel()->find($category->parent)){
                 return str_slug($getParentSearch->title);
             }
@@ -184,7 +182,6 @@ class AdminWizard
         }
 
         if(empty($category->title)){
-            \Log::error('Импорт раздела не прошел', $category);
             return abort(500, 'Раздел не был добавлен');
         }
 

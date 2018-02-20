@@ -4,7 +4,6 @@ namespace Larrock\ComponentWizard\Commands;
 
 use Illuminate\Console\Command;
 use Larrock\ComponentWizard\Helpers\AdminWizard;
-use Excel;
 
 /**
  * Импорт листа прайса .xlsx
@@ -41,7 +40,7 @@ class WizardImportSheetCommand extends Command
             return \Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
         });
 
-        $bar = $this->output->createProgressBar(count($data));
+        $bar = $this->output->createProgressBar(\count($data));
         $adminWizard->artisanSheetImport($sheet, $bar, $data, $this->option('sleep'), $this->option('withoutimage'));
         $bar->finish();
         \Log::info('Sheet #'. $sheet .' successful imported.');

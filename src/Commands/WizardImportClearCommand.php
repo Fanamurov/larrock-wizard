@@ -4,9 +4,7 @@ namespace Larrock\ComponentWizard\Commands;
 
 use Illuminate\Console\Command;
 use Larrock\ComponentCatalog\Facades\LarrockCatalog;
-use Larrock\ComponentCatalog\Models\Catalog;
 use Larrock\ComponentCategory\Facades\LarrockCategory;
-use Larrock\ComponentCategory\Models\Category;
 use Spatie\MediaLibrary\Media;
 
 /**
@@ -59,7 +57,7 @@ class WizardImportClearCommand extends Command
 
         //Копия метода $adminWizard->deleteCatalog(), здесь добавлен прогресс бар на вывод
         $delete = LarrockCatalog::getModel()->all();
-        $bar = $this->output->createProgressBar(count($delete));
+        $bar = $this->output->createProgressBar(\count($delete));
         $start = microtime(true);
 
         if($withoutimage){
@@ -67,12 +65,10 @@ class WizardImportClearCommand extends Command
         }
 
         foreach($delete as $delete_value){
-            if($sleep && $sleep > 0){
-                if(microtime(true) - $start > 1){
-                    echo 'sleep '. $sleep .' seconds';
-                    sleep($sleep);
-                    $start = microtime(true);
-                }
+            if($sleep && $sleep > 0 && (microtime(true) - $start > 1)){
+                echo 'sleep '. $sleep .' seconds';
+                sleep($sleep);
+                $start = microtime(true);
             }
             //Очищаем связи с фото
             $find_item = LarrockCatalog::getModel()->find($delete_value->id);
@@ -96,7 +92,7 @@ class WizardImportClearCommand extends Command
 
         //Копия метода $adminWizard->deleteCategoryCatalog(), здесь добавлен прогресс бар на вывод
         $delete = LarrockCategory::getModel()->whereComponent('catalog')->get();
-        $bar = $this->output->createProgressBar(count($delete));
+        $bar = $this->output->createProgressBar(\count($delete));
 
         if($withoutimage){
             Media::whereModelType(LarrockCategory::getModelName())->delete();

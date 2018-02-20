@@ -60,7 +60,6 @@ class AdminWizardController extends Controller
 
     /**
      * Парсинг содержимого листов прайса
-     *
      * @param int $sheet
      * @param AdminWizard $adminWizard
      * @return array|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -82,10 +81,10 @@ class AdminWizardController extends Controller
         }
 
         $data['sheet'] = $sheet;
-        $data['images'] = Cache::remember('scanImageDir', 1440, function() use ($adminWizard){
+        $data['images'] = Cache::rememberForever('scanImageDir', function() use ($adminWizard){
             return $adminWizard->scanImageDir();
         });
-        if(count($data['data']) > 0){
+        if(\count($data['data']) > 0){
             return view('larrock::admin.wizard.sheet', $data);
         }
         \Session::push('message.danger', 'В листе #'. $sheet .' не найдено данных');
@@ -95,7 +94,6 @@ class AdminWizardController extends Controller
 
     /**
      * Метод импорта строки из прайса в БД
-     *
      * @param Request $request
      * @param AdminWizard $adminWizard
      * @return \Illuminate\Http\JsonResponse
@@ -114,8 +112,8 @@ class AdminWizardController extends Controller
 
     /**
      * Очистка БД каталога перед новым импортом
-     *
      * @param AdminWizard $adminWizard
+     * @param null|bool $manual
      * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
     public function clear(AdminWizard $adminWizard, $manual = NULL)
@@ -140,7 +138,6 @@ class AdminWizardController extends Controller
 
     /**
      * Обновление файла прайса по ячейке
-     *
      * @param Request $request
      * @param AdminWizard $adminWizard
      * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
@@ -161,7 +158,6 @@ class AdminWizardController extends Controller
 
     /**
      * Запись конфига полей
-     *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
@@ -233,7 +229,6 @@ class AdminWizardController extends Controller
 
     /**
      * Загрузка фото для импорта
-     *
      * @param Request $request
      * @return AdminWizardController|\Illuminate\Http\RedirectResponse
      */
@@ -252,7 +247,7 @@ class AdminWizardController extends Controller
         foreach ($request->file('images') as $image){
             $extension = $image->getClientOriginalExtension();
             $allow_extensions = ['jpg', 'jpeg', 'gif', 'png'];
-            if(in_array($extension, $allow_extensions, TRUE)){
+            if(\in_array($extension, $allow_extensions, TRUE)){
                 $uniqueFileName = $image->getClientOriginalName();
                 if($image->move(public_path('media/wizard'), $uniqueFileName)){
                     \Session::push('message.success', 'Фото '. $uniqueFileName .' успешно загружено');
@@ -263,14 +258,12 @@ class AdminWizardController extends Controller
                 \Session::push('message.danger', 'Загружаемый формат файла '. $image->getClientOriginalName() .' отличается от требуемых (jpg, jpeg, gif, png)');
             }
         }
-
         return back()->withInput();
     }
 
 
     /**
      * Создание миграции и ее выполнение для создание нового поля в таблице catalog
-     *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -285,9 +278,7 @@ class AdminWizardController extends Controller
         return response()->json(['status' => 'error', 'message' => 'Column не передано или пустое']);
     }
 
-    /**
-     * Откат изменений
-     */
+    /** Откат изменений */
     public function rollbackMigration(){
         \Artisan::call('migrate:rollback');
     }
