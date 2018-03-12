@@ -23,9 +23,13 @@ class AdminWizard
         $rows = Cache::rememberForever('WizardRows', function () {
             if(($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()) && \is_array($get_config_db->value)){
                 foreach ($get_config_db->value as $key => $value){
-                    $this->rows[$key] = $value;
+                    $rows[$key] = $value;
                 }
             }
+            if( !isset($rows)){
+                return [];
+            }
+            return $rows;
         });
         $this->rows = $rows;
     }
