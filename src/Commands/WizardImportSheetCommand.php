@@ -31,12 +31,13 @@ class WizardImportSheetCommand extends Command
      * Execute the console command.
      *
      * @return mixed
+     * @throws \Exception
      */
     public function handle()
     {
         $sheet = (int)$this->option('sheet');
         $adminWizard = new AdminWizard();
-        $data = \Cache::remember('ImportSheet'. $sheet, 1440, function() use ($sheet, $adminWizard){
+        $data = \Cache::rememberForever('ImportSheet'. $sheet, function() use ($sheet, $adminWizard){
             return \Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function($reader) {})->get();
         });
 

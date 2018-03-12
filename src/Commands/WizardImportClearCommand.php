@@ -3,8 +3,8 @@
 namespace Larrock\ComponentWizard\Commands;
 
 use Illuminate\Console\Command;
-use Larrock\ComponentCatalog\Facades\LarrockCatalog;
-use Larrock\ComponentCategory\Facades\LarrockCategory;
+use LarrockCatalog;
+use LarrockCategory;
 use Spatie\MediaLibrary\Media;
 
 /**
@@ -78,8 +78,8 @@ class WizardImportClearCommand extends Command
             }
 
             $delete_value->delete();
-            if($delete_value->get_category()->count() > 0){
-                $delete_value->get_category()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
+            if($delete_value->getCategory()->count() > 0){
+                $delete_value->getCategory()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
             }
             $bar->advance();
         }

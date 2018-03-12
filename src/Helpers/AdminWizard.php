@@ -317,7 +317,7 @@ class AdminWizard
         }
 
         if($save = $catalog->save()){
-            $catalog->get_category()->attach($request->get('current_category'));
+            $catalog->getCategory()->attach($request->get('current_category'));
             if($request->has('foto') && $request->get('foto', '') !== ''){
                 $add_foto = $this->add_images($catalog->id, $request->get('foto'), 'catalog', $withoutimage);
                 return ['category_id' => $request->get('current_category'), 'category_level' => $request->get('current_level'),
@@ -381,8 +381,8 @@ class AdminWizard
                 $find_item->clearMediaCollection('images');
             }
             $delete_value->delete();
-            if($delete_value->get_category()->count() > 0){
-                $delete_value->get_category()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
+            if($delete_value->getCategory()->count() > 0){
+                $delete_value->getCategory()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
             }
         }
         return TRUE;

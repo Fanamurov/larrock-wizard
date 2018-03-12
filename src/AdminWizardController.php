@@ -97,6 +97,7 @@ class AdminWizardController extends Controller
      * @param Request $request
      * @param AdminWizard $adminWizard
      * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
     public function importrow(Request $request, AdminWizard $adminWizard)
     {
