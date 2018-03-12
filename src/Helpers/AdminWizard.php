@@ -5,10 +5,10 @@ namespace Larrock\ComponentWizard\Helpers;
 use Auth;
 use Excel;
 use Illuminate\Http\Request;
-use Larrock\Core\Helpers\MessageLarrock;
+use Cache;
 use Larrock\Core\Models\Config as Model_Config;
-use Larrock\ComponentCatalog\Facades\LarrockCatalog;
-use Larrock\ComponentCategory\Facades\LarrockCategory;
+use LarrockCatalog;
+use LarrockCategory;
 use Spatie\MediaLibrary\Media;
 
 class AdminWizard
@@ -17,26 +17,27 @@ class AdminWizard
 
     public function __construct()
     {
-        $this->rows = [];
         if(config('larrock-wizard.rows')){
             $this->rows = config('larrock-wizard.rows');
         }
-        if($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()){
-            if(\is_array($get_config_db->value)){
+        $rows = Cache::rememberForever('WizardRows', function () {
+            if(($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()) && \is_array($get_config_db->value)){
                 foreach ($get_config_db->value as $key => $value){
                     $this->rows[$key] = $value;
                 }
             }
-        }
+        });
+        $this->rows = $rows;
     }
 
     /**
      * Запуск импорта через artisan
-     * @param int           $sheet          Номер листа .xlsx для импорта (начиная с нуля)
-     * @param null          $bar            Прогресс бар для artisan
-     * @param null|array    $sheet_data     Данные из xls
-     * @param null|int      $sleep          Сколько секунд ждать после 1 секунды выполнения (sweb привет)
-     * @param null|bool     $withoutimage   Не перегенерировать фотографии
+     * @param int $sheet Номер листа .xlsx для импорта (начиная с нуля)
+     * @param null $bar Прогресс бар для artisan
+     * @param null|array $sheet_data Данные из xls
+     * @param null|int $sleep Сколько секунд ждать после 1 секунды выполнения (sweb привет)
+     * @param null|bool $withoutimage Не перегенерировать фотографии
+     * @throws \Exception
      */
     public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL, $withoutimage = NULL)
     {
@@ -52,12 +53,10 @@ class AdminWizard
         $start = microtime(true);
 
         foreach ($data as $data_value){
-            if($sleep && $sleep > 0){
-                if(microtime(true) - $start > 1){
-                    echo 'sleep '. $sleep .' seconds';
-                    sleep($sleep);
-                    $start = microtime(true);
-                }
+            if(($sleep && $sleep > 0) && microtime(true) - $start > 1){
+                echo 'sleep '. $sleep .' seconds';
+                sleep($sleep);
+                $start = microtime(true);
             }
             if(str_contains($data_value['naimenovanie'], '{=R')){
                 if($category = $this->search_category($data_value['naimenovanie'])){
@@ -98,7 +97,7 @@ class AdminWizard
 
     /**
      * Поиск названия файла прайса для импорта
-     * @return string
+     * @return string|null
      */
     public function findXLSX()
     {
@@ -109,6 +108,7 @@ class AdminWizard
             });
             return $filtered->first();
         }
+        return null;
     }
 
 
@@ -159,7 +159,7 @@ class AdminWizard
         }else{
             $category->url = str_slug($category->title);
         }
-        if(strlen($category->url) > 200){
+        if(\strlen($category->url) > 200){
             if($category->level > 1){
                 $category->url = str_limit(str_slug($category->title), 190, '') .'-'. str_limit($slug_parent, 8, '') .'-l'. $category->level;
             }else{
@@ -208,11 +208,12 @@ class AdminWizard
      * @param $type
      * @param $withoutimage
      * @return array
+     * @throws \Exception
      */
     public function add_images($id_content, $image_name, $type, $withoutimage = NULL)
     {
         if( !$id_content){
-            abort(404, 'Не передан id_content');
+            throw new \Exception('Не передан id_content', 503);
         }
         if($withoutimage && !empty($image_name)){
             $model_type = LarrockCatalog::getModelName();
@@ -261,6 +262,7 @@ class AdminWizard
      *
      * @param Request $request
      * @return array
+     * @throws \Exception
      */
     public function importTovar(Request $request, $withoutimage = NULL)
     {
@@ -276,7 +278,7 @@ class AdminWizard
         }
         $catalog->url = str_slug($catalog->title);
 
-        if(strlen($catalog->url) > 120){
+        if(\strlen($catalog->url) > 120){
             $catalog->url = str_limit($catalog->url, 120);
         }
 
@@ -416,7 +418,7 @@ class AdminWizard
                 if($file !== '.' && $file !== '..'){
                     $explode_file = explode('.', $file);
                     $allow_extensions = ['png', 'jpg', 'jpeg', 'gif'];
-                    if(in_array(last($explode_file), $allow_extensions, false)){
+                    if(\in_array(last($explode_file), $allow_extensions, false)){
                         $images[] = $file;
                     }
                 }
