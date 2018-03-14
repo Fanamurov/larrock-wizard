@@ -15,7 +15,6 @@
         }
     },
     "require": {
-        "fanamurov/larrock-core": "^1.0",
         "fanamurov/larrock-catalog": "^1.0",
         "maatwebsite/excel": "^2.1",
         "laracasts/generators": "^1.1"
