@@ -3,13 +3,13 @@
 namespace Larrock\ComponentWizard\Helpers;
 
 use Auth;
-use Excel;
-use Illuminate\Http\Request;
 use Cache;
-use Larrock\Core\Models\Config as Model_Config;
+use Excel;
 use LarrockCatalog;
 use LarrockCategory;
+use Illuminate\Http\Request;
 use Spatie\MediaLibrary\Media;
+use Larrock\Core\Models\Config as Model_Config;
 
 class AdminWizard
 {
@@ -17,25 +17,26 @@ class AdminWizard
 
     public function __construct()
     {
-        if(config('larrock-wizard.rows')){
+        if (config('larrock-wizard.rows')) {
             $this->rows = config('larrock-wizard.rows');
         }
         $rows = Cache::rememberForever('WizardRows', function () {
-            if(($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()) && \is_array($get_config_db->value)){
-                foreach ($get_config_db->value as $key => $value){
+            if (($get_config_db = Model_Config::whereType('wizard')->whereName('catalog')->first()) && \is_array($get_config_db->value)) {
+                foreach ($get_config_db->value as $key => $value) {
                     $rows[$key] = $value;
                 }
             }
-            if( !isset($rows)){
+            if (! isset($rows)) {
                 return [];
             }
+
             return $rows;
         });
         $this->rows = $rows;
     }
 
     /**
-     * Запуск импорта через artisan
+     * Запуск импорта через artisan.
      * @param int $sheet Номер листа .xlsx для импорта (начиная с нуля)
      * @param null $bar Прогресс бар для artisan
      * @param null|array $sheet_data Данные из xls
@@ -43,12 +44,13 @@ class AdminWizard
      * @param null|bool $withoutimage Не перегенерировать фотографии
      * @throws \Exception
      */
-    public function artisanSheetImport($sheet, $bar = NULL, $sheet_data = NULL, $sleep = NULL, $withoutimage = NULL)
+    public function artisanSheetImport($sheet, $bar = null, $sheet_data = null, $sleep = null, $withoutimage = null)
     {
-        if($sheet_data){
+        if ($sheet_data) {
             $data = $sheet_data;
-        }else{
-            $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function($reader) {})->get();
+        } else {
+            $data = Excel::selectSheetsByIndex($sheet)->load($this->findXLSX(), function ($reader) {
+            })->get();
         }
 
         $current_category = 'undefined';
@@ -56,14 +58,14 @@ class AdminWizard
 
         $start = microtime(true);
 
-        foreach ($data as $data_value){
-            if(($sleep && $sleep > 0) && microtime(true) - $start > 1){
-                echo 'sleep '. $sleep .' seconds';
+        foreach ($data as $data_value) {
+            if (($sleep && $sleep > 0) && microtime(true) - $start > 1) {
+                echo 'sleep '.$sleep.' seconds';
                 sleep($sleep);
                 $start = microtime(true);
             }
-            if(str_contains($data_value['naimenovanie'], '{=R')){
-                if($category = $this->search_category($data_value['naimenovanie'])){
+            if (str_contains($data_value['naimenovanie'], '{=R')) {
+                if ($category = $this->search_category($data_value['naimenovanie'])) {
                     $request = new Request();
                     $request->merge($data_value->toArray());
                     $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
@@ -72,15 +74,15 @@ class AdminWizard
                     $current_category = $import_category['category_id'];
                     $current_level = $import_category['category_level'];
                 }
-            }else{
+            } else {
                 $request = new Request();
 
                 $data = [];
-                foreach($this->rows as $key => $row){
-                    if($data_value->has($key)){
-                        if(empty($row['db']) && $key === 'foto'){
+                foreach ($this->rows as $key => $row) {
+                    if ($data_value->has($key)) {
+                        if (empty($row['db']) && $key === 'foto') {
                             $data['foto'] = $data_value->get($key);
-                        }else{
+                        } else {
                             $data[$row['db']] = $data_value->get($key);
                         }
                     }
@@ -88,48 +90,48 @@ class AdminWizard
 
                 $request->merge($data);
                 $request->merge(['current_category' => $current_category, 'current_level' => $current_level]);
-                if(isset($request->title) && !empty($request->title)){
+                if (isset($request->title) && ! empty($request->title)) {
                     $this->importTovar($request, $withoutimage);
                 }
             }
-            if($bar){
+            if ($bar) {
                 $bar->advance();
             }
         }
     }
 
-
     /**
-     * Поиск названия файла прайса для импорта
+     * Поиск названия файла прайса для импорта.
      * @return string|null
      */
     public function findXLSX()
     {
-        if(\File::exists(resource_path('wizard'))){
+        if (\File::exists(resource_path('wizard'))) {
             $files = collect(\File::allFiles(resource_path('wizard')));
             $filtered = $files->filter(function ($value, $key) {
                 return $value->getExtension() === 'xlsx';
             });
+
             return $filtered->first();
         }
+
         return null;
     }
 
-
     /**
-     * Импорт раздела
+     * Импорт раздела.
      * @param $data
      * @param Request $request
      * @param null|bool $withoutimage
      * @return array
      */
-    public function importCategory($data, Request $request, $withoutimage = NULL)
+    public function importCategory($data, Request $request, $withoutimage = null)
     {
         $prev_category = $request->get('current_category');
         $prev_level = $request->get('current_level');
 
-        foreach($this->rows as $key => $row){
-            if($request->has($key) && $row['db'] !== 'title'){
+        foreach ($this->rows as $key => $row) {
+            if ($request->has($key) && $row['db'] !== 'title') {
                 $data[$row['db']] = $request->get($key);
             }
         }
@@ -138,35 +140,35 @@ class AdminWizard
 
         $category->component = 'catalog';
 
-        if($category->level === 1){
-            $category->parent = NULL;
-        }else{
-            if((int)$prev_level +1 === $category->level){
+        if ($category->level === 1) {
+            $category->parent = null;
+        } else {
+            if ((int) $prev_level + 1 === $category->level) {
                 $category->parent = $prev_category;
-            }
-            else{
+            } else {
                 $prev_category_data = LarrockCategory::getModel()->find($prev_category);
                 $get_parent = collect($prev_category_data->parent_tree)->where('level', $category->level - 1);
                 $category->parent = $get_parent->first()->id;
             }
         }
 
-        $slug_parent = \Cache::rememberForever('getSlugWizard'. $category->parent, function() use ($category){
-            if($getParentSearch = LarrockCategory::getModel()->find($category->parent)){
+        $slug_parent = \Cache::rememberForever('getSlugWizard'.$category->parent, function () use ($category) {
+            if ($getParentSearch = LarrockCategory::getModel()->find($category->parent)) {
                 return str_slug($getParentSearch->title);
             }
+
             return '';
         });
 
-        if($category->level > 1){
-            $category->url = str_slug($category->title) .'-'. $slug_parent .'-l'. $category->level;
-        }else{
+        if ($category->level > 1) {
+            $category->url = str_slug($category->title).'-'.$slug_parent.'-l'.$category->level;
+        } else {
             $category->url = str_slug($category->title);
         }
-        if(\strlen($category->url) > 200){
-            if($category->level > 1){
-                $category->url = str_limit(str_slug($category->title), 190, '') .'-'. str_limit($slug_parent, 8, '') .'-l'. $category->level;
-            }else{
+        if (\strlen($category->url) > 200) {
+            if ($category->level > 1) {
+                $category->url = str_limit(str_slug($category->title), 190, '').'-'.str_limit($slug_parent, 8, '').'-l'.$category->level;
+            } else {
                 $category->url = str_limit($category->url, 200, '');
             }
         }
@@ -174,39 +176,40 @@ class AdminWizard
         $category->sitemap = 1;
         $category->position = 0;
         $category->active = 1;
-        if(Auth::user()){
+        if (Auth::user()) {
             $category->user_id = Auth::user()->id;
-        }else{
-            $category->user_id = NULL;
+        } else {
+            $category->user_id = null;
         }
 
         //Проверяем, вносили ли мы уже эту категорию в базу
-        if($oldCategory = LarrockCategory::getModel()->whereUrl($category->url)->first()){
+        if ($oldCategory = LarrockCategory::getModel()->whereUrl($category->url)->first()) {
             return ['category_id' => $oldCategory->id, 'category_level' => $oldCategory->level, 'category_title' => $oldCategory->title];
         }
 
-        if(empty($category->title)){
+        if (empty($category->title)) {
             return abort(500, 'Раздел не был добавлен');
         }
 
-        if($save = $category->save()){
-            if($request->has('foto') && $request->get('foto', '') !== ''){
+        if ($save = $category->save()) {
+            if ($request->has('foto') && $request->get('foto', '') !== '') {
                 $add_foto = $this->add_images($category->id, $request->get('foto'), 'category', $withoutimage);
+
                 return ['category_id' => $category->id, 'category_level' => $category->level,
                     'category_title' => $category->title,
-                    'foto' => $add_foto];
+                    'foto' => $add_foto, ];
             }
+
             return ['category_id' => $category->id, 'category_level' => $category->level,
                 'category_title' => $category->title,
-                'foto' => ['status' => 'notice', 'message' => 'Колонка фото не передана']];
+                'foto' => ['status' => 'notice', 'message' => 'Колонка фото не передана'], ];
         }
 
         return abort(500, 'Раздел не был добавлен');
     }
 
-
     /**
-     * Добавление фото раздела
+     * Добавление фото раздела.
      * @param $id_content
      * @param $image_name
      * @param $type
@@ -214,18 +217,18 @@ class AdminWizard
      * @return array
      * @throws \Exception
      */
-    public function add_images($id_content, $image_name, $type, $withoutimage = NULL)
+    public function add_images($id_content, $image_name, $type, $withoutimage = null)
     {
-        if( !$id_content){
+        if (! $id_content) {
             throw new \Exception('Не передан id_content', 503);
         }
-        if($withoutimage && !empty($image_name)){
+        if ($withoutimage && ! empty($image_name)) {
             $model_type = LarrockCatalog::getModelName();
-            if($type === 'category'){
+            if ($type === 'category') {
                 $model_type = LarrockCategory::getModelName();
             }
             $explode_name = explode('.', $image_name);
-            $name = str_replace('.'. array_last($explode_name), '', $image_name);
+            $name = str_replace('.'.array_last($explode_name), '', $image_name);
             $new_media = new Media();
             $new_media['model_id'] = $id_content;
             $new_media['model_type'] = $model_type;
@@ -234,106 +237,110 @@ class AdminWizard
             $new_media['file_name'] = $image_name;
             $new_media['size'] = $image_name;
             $new_media->save();
+
             return ['status' => 'notice', 'message' => 'Фото не обрабатываются'];
         }
-        if( !empty($image_name)){
+        if (! empty($image_name)) {
             //Ищем указание нескольких фото
             $images = array_map('trim', explode(',', $image_name));
-            foreach ($images as $image){
+            foreach ($images as $image) {
                 //Именно base_path, при вызове через artisan public_path() не правильный
-                if(file_exists(base_path('public_html/media/Wizard/'. $image))){
-                    if($type === 'category'){
+                if (file_exists(base_path('public_html/media/Wizard/'.$image))) {
+                    if ($type === 'category') {
                         $content = LarrockCategory::getModel()->findOrFail($id_content);
-                    }elseif($type === 'catalog'){
+                    } elseif ($type === 'catalog') {
                         $content = LarrockCatalog::getModel()->findOrFail($id_content);
                     }
-                    if( !$content->addMedia(base_path('public_html/media/Wizard/'. $image))->preservingOriginal()->toMediaCollection('images')){
-                        return ['status' => 'error', 'message' => 'Фото '. $image. ' найдено, но не обработано'];
+                    if (! $content->addMedia(base_path('public_html/media/Wizard/'.$image))->preservingOriginal()->toMediaCollection('images')) {
+                        return ['status' => 'error', 'message' => 'Фото '.$image.' найдено, но не обработано'];
                     }
-                }else{
-                    return ['status' => 'error', 'message' => 'Фото '. $image. ' не найдено'];
+                } else {
+                    return ['status' => 'error', 'message' => 'Фото '.$image.' не найдено'];
                 }
             }
-            return ['status' => 'success', 'message' => 'Фотографии '. $image_name. ' добавлены'];
+
+            return ['status' => 'success', 'message' => 'Фотографии '.$image_name.' добавлены'];
         }
 
         return ['status' => 'notice', 'message' => 'У товара фото не назначено'];
     }
 
-
     /**
-     * Импорт товара каталога
+     * Импорт товара каталога.
      *
      * @param Request $request
      * @return array
      * @throws \Exception
      */
-    public function importTovar(Request $request, $withoutimage = NULL)
+    public function importTovar(Request $request, $withoutimage = null)
     {
-        foreach($this->rows as $key => $row){
-            if($request->has($key) && $row['db'] !== 'title'){
+        foreach ($this->rows as $key => $row) {
+            if ($request->has($key) && $row['db'] !== 'title') {
                 $data[$row['db']] = $request->get($key);
             }
         }
         $catalog = LarrockCatalog::getModel()->fill($request->all());
 
-        if($request->has('cost')){
+        if ($request->has('cost')) {
             $catalog->cost = str_replace(',', '.', $catalog->cost);
         }
         $catalog->url = str_slug($catalog->title);
 
-        if(\strlen($catalog->url) > 120){
+        if (\strlen($catalog->url) > 120) {
             $catalog->url = str_limit($catalog->url, 120);
         }
 
         //Проверяем совпадение по url-товаров
-        $search_match = \Cache::remember(sha1('searchMatch-'. $catalog->url), 1440, function() use ($catalog){
+        $search_match = \Cache::remember(sha1('searchMatch-'.$catalog->url), 1440, function () use ($catalog) {
             return LarrockCatalog::getModel()->whereUrl($catalog->url)->first();
         });
 
-        if($search_match && $find_tovar = LarrockCatalog::getModel()->whereTitle($catalog->title)->latest('id')->first()){
+        if ($search_match && $find_tovar = LarrockCatalog::getModel()->whereTitle($catalog->title)->latest('id')->first()) {
             //Нашли совпадение по базе, ищем наибольший постфикс и делаем +1
             $explode = explode('-ccc', $find_tovar->url);
-            if(array_key_exists(1, $explode)){
+            if (array_key_exists(1, $explode)) {
                 echo $explode[1];
-                $index = (int)$explode[1] +1;
-                $catalog->url = $catalog->url .'-ccc'. $index;
-            }else{
+                $index = (int) $explode[1] + 1;
+                $catalog->url = $catalog->url.'-ccc'.$index;
+            } else {
                 $catalog->url .= '-ccc1';
             }
         }
 
         $catalog->position = 0;
         $catalog->active = 1;
-        if(Auth::user()){
+        if (Auth::user()) {
             $catalog->user_id = Auth::user()->id;
-        }else{
-            $catalog->user_id = NULL;
+        } else {
+            $catalog->user_id = null;
         }
 
-        if(empty($catalog->title)){
+        if (empty($catalog->title)) {
             \Log::error('Импорт товара не прошел', $catalog);
+
             return abort(500, 'Товар не был добавлен');
         }
 
-        if($save = $catalog->save()){
+        if ($save = $catalog->save()) {
             $catalog->getCategory()->attach($request->get('current_category'));
-            if($request->has('foto') && $request->get('foto', '') !== ''){
+            if ($request->has('foto') && $request->get('foto', '') !== '') {
                 $add_foto = $this->add_images($catalog->id, $request->get('foto'), 'catalog', $withoutimage);
+
                 return ['category_id' => $request->get('current_category'), 'category_level' => $request->get('current_level'),
                     'category_title' => $request->get('current_title'),
-                    'foto' => $add_foto];
+                    'foto' => $add_foto, ];
             }
+
             return ['id' => $catalog->id, 'category_id' => $request->get('current_category'), 'category_level' => $request->get('current_level'),
                 'category_title' => $request->get('current_title'),
-                'foto' => ['status' => 'notice', 'message' => 'Колонка фото не передана']];
+                'foto' => ['status' => 'notice', 'message' => 'Колонка фото не передана'], ];
         }
+
         return abort(500, 'Товар не был добавлен');
     }
 
-
     /**
-     * Получение списка заполняемых полей из модели Catalog
+     * Получение списка заполняемых полей из модели Catalog.
      *
      * @return array
      */
@@ -341,7 +348,6 @@ class AdminWizard
     {
         return LarrockCatalog::getModel()->getFillable();
     }
-
 
     /**
      * Парсинг поля из прайса и поиск метки раздела. Делаем вывод раздел это или товар
@@ -352,22 +358,23 @@ class AdminWizard
     public function search_category($row)
     {
         $category = [];
-        if(preg_match('/{=R\d=}/', $row, $match)){
-            if(preg_match('/(.*?){=R\d=}/', $row, $title)){
+        if (preg_match('/{=R\d=}/', $row, $match)) {
+            if (preg_match('/(.*?){=R\d=}/', $row, $title)) {
                 $category['title'] = $title['1'];
             }
-            if(preg_match('/{=R(.*?)=}/', $row, $level)){
+            if (preg_match('/{=R(.*?)=}/', $row, $level)) {
                 $category['level'] = $level['1'];
             }
+
             return $category;
         }
-        return FALSE;
-    }
 
+        return false;
+    }
 
     /**
      * Удаление всех товаров каталога и открепление разделов
-     * Очистка связей с фото
+     * Очистка связей с фото.
      *
      * @return bool
      */
@@ -375,60 +382,62 @@ class AdminWizard
     {
         $delete = LarrockCatalog::getModel()->all();
 
-        foreach($delete as $delete_value){
+        foreach ($delete as $delete_value) {
             //Очищаем связи с фото
-            if($find_item = LarrockCatalog::getModel()->find($delete_value->id)){
+            if ($find_item = LarrockCatalog::getModel()->find($delete_value->id)) {
                 $find_item->clearMediaCollection('images');
             }
             $delete_value->delete();
-            if($delete_value->getCategory()->count() > 0){
+            if ($delete_value->getCategory()->count() > 0) {
                 $delete_value->getCategory()->detach($delete_value->category, ['catalog_id' => $delete_value->id]);
             }
         }
-        return TRUE;
-    }
 
+        return true;
+    }
 
     /**
      * Удаление разделов каталога. Выполнять только после deleteCatalog()
-     * Очистка связей с фото
+     * Очистка связей с фото.
      *
      * @return bool
      */
     public function deleteCategoryCatalog()
     {
         $delete = LarrockCategory::getModel()->whereComponent('catalog')->get();
-        foreach($delete as $delete_value){
+        foreach ($delete as $delete_value) {
             //Очищаем связи с фото
-            if($find_item = LarrockCategory::getModel()->find($delete_value->id)){
+            if ($find_item = LarrockCategory::getModel()->find($delete_value->id)) {
                 $find_item->clearMediaCollection('images');
             }
 
             $delete_value->delete();
         }
-        return TRUE;
+
+        return true;
     }
 
     /**
-     * Сканирование директории с картинками для экспорта
+     * Сканирование директории с картинками для экспорта.
      *
      * @return array
      */
     public function scanImageDir()
     {
         $images = [];
-        if(file_exists(public_path('media/Wizard')) && $handle = opendir(public_path('media/Wizard'))){
-            while(false !== ($file = readdir($handle))){
-                if($file !== '.' && $file !== '..'){
+        if (file_exists(public_path('media/Wizard')) && $handle = opendir(public_path('media/Wizard'))) {
+            while (false !== ($file = readdir($handle))) {
+                if ($file !== '.' && $file !== '..') {
                     $explode_file = explode('.', $file);
                     $allow_extensions = ['png', 'jpg', 'jpeg', 'gif'];
-                    if(\in_array(last($explode_file), $allow_extensions, false)){
+                    if (\in_array(last($explode_file), $allow_extensions, false)) {
                         $images[] = $file;
                     }
                 }
             }
             closedir($handle);
         }
+
         return $images;
     }
 }

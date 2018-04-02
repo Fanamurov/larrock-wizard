@@ -2,40 +2,40 @@
 
 use Larrock\ComponentWizard\AdminWizardController;
 
-Route::group(['prefix' => 'admin'], function(){
+Route::group(['prefix' => 'admin'], function () {
     Route::get('/wizard', [
-        'as' => 'admin.wizard', 'uses' => AdminWizardController::class .'@index'
+        'as' => 'admin.wizard', 'uses' => AdminWizardController::class.'@index',
     ]);
     Route::get('/wizard/config', [
-        'as' => 'admin.wizard.config', 'uses' => AdminWizardController::class .'@aliases'
+        'as' => 'admin.wizard.config', 'uses' => AdminWizardController::class.'@aliases',
     ]);
     Route::get('/wizard/clear/{manual?}', [
-        'as' => 'admin.wizard.clear', 'uses' => AdminWizardController::class .'@clear'
+        'as' => 'admin.wizard.clear', 'uses' => AdminWizardController::class.'@clear',
     ]);
     Route::post('/wizard/importrow', [
-        'as' => 'admin.wizard.importrow', 'uses' => AdminWizardController::class .'@importrow'
+        'as' => 'admin.wizard.importrow', 'uses' => AdminWizardController::class.'@importrow',
     ]);
     Route::get('/wizard/sheetParse/{sheet}', [
-        'as' => 'admin.wizard.sheetParse', 'uses' => AdminWizardController::class .'@sheetParse'
+        'as' => 'admin.wizard.sheetParse', 'uses' => AdminWizardController::class.'@sheetParse',
     ]);
-    Route::post('/wizard/storeConfig', AdminWizardController::class .'@storeConfig');
+    Route::post('/wizard/storeConfig', AdminWizardController::class.'@storeConfig');
     Route::get('/wizard/updateXLSX', [
-        'as' => 'admin.wizard.updateXLSX', 'uses' => AdminWizardController::class .'@updateXLSX'
+        'as' => 'admin.wizard.updateXLSX', 'uses' => AdminWizardController::class.'@updateXLSX',
     ]);
     Route::post('/wizard/loadXLSX', [
-        'as' => 'admin.wizard.loadXLSX', 'uses' => AdminWizardController::class .'@loadXLSX'
+        'as' => 'admin.wizard.loadXLSX', 'uses' => AdminWizardController::class.'@loadXLSX',
     ]);
     Route::post('/wizard/loadImages', [
-        'as' => 'admin.wizard.loadImages', 'uses' => AdminWizardController::class .'@loadImages'
+        'as' => 'admin.wizard.loadImages', 'uses' => AdminWizardController::class.'@loadImages',
     ]);
     Route::get('/wizard/createMigration', [
-        'as' => 'admin.wizard.createMigration', 'uses' => AdminWizardController::class .'@createMigration'
+        'as' => 'admin.wizard.createMigration', 'uses' => AdminWizardController::class.'@createMigration',
     ]);
     Route::get('/wizard/rollbackMigration', [
-        'as' => 'admin.wizard.rollbackMigration', 'uses' => AdminWizardController::class .'@rollbackMigration'
+        'as' => 'admin.wizard.rollbackMigration', 'uses' => AdminWizardController::class.'@rollbackMigration',
     ]);
 });
 
-Breadcrumbs::register('admin.wizard.result', function($breadcrumbs){
+Breadcrumbs::register('admin.wizard.result', function ($breadcrumbs) {
     $breadcrumbs->push('Wizard - импорт каталога');
 });

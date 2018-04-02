@@ -3,8 +3,8 @@
 namespace Larrock\ComponentWizard;
 
 use Illuminate\Support\ServiceProvider;
-use Larrock\ComponentWizard\Commands\WizardImportClearCommand;
 use Larrock\ComponentWizard\Commands\WizardImportCommand;
+use Larrock\ComponentWizard\Commands\WizardImportClearCommand;
 use Larrock\ComponentWizard\Commands\WizardImportSheetCommand;
 
 class LarrockComponentWizardServiceProvider extends ServiceProvider
@@ -43,6 +43,6 @@ class LarrockComponentWizardServiceProvider extends ServiceProvider
             'command.wizard:clear',
         ]);
 
-        $this->mergeConfigFrom( __DIR__.'/../config/larrock-wizard.php', 'larrock-wizard');
+        $this->mergeConfigFrom(__DIR__.'/../config/larrock-wizard.php', 'larrock-wizard');
     }
 }
