@@ -5,10 +5,10 @@
     <div class="container-head uk-margin-bottom">
         <div class="uk-grid">
             <div class="uk-width-expand">
-                {!! Breadcrumbs::render('admin.'. $app->name .'.result') !!}
+                {!! Breadcrumbs::render('admin.'. $packagename .'.result') !!}
             </div>
             <div class="uk-width-auto">
-                <a class="uk-button uk-button-primary" href="/admin/{{ $app->name }}/clear/manual">Ручная очистка каталога</a>
+                <a class="uk-button uk-button-primary" href="/admin/{{ $packagename }}/clear/manual">Ручная очистка каталога</a>
                 <button type="button" class="start_import uk-button uk-button-success" @if( !isset($xlsx) || !isset($data)) disabled @endif>Старт импорта</button>
             </div>
         </div>
