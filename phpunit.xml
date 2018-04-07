@@ -15,13 +15,16 @@
         <env name="APP_KEY" value="AckfSECXIvnK5r28GVIWUAxmbBSjTsmF"/>
     </php>
     <testsuites>
-        <testsuite name="LarrockBlocks Test Suite">
+        <testsuite name="LarrockCatalog Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
     <filter>
         <whitelist>
             <directory suffix=".php">src/</directory>
+            <exclude>
+                <directory suffix=".php">src/Commands</directory>
+            </exclude>
         </whitelist>
     </filter>
     <logging>
