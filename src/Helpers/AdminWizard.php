@@ -5,6 +5,9 @@ namespace Larrock\ComponentWizard\Helpers;
 use Auth;
 use Cache;
 use Excel;
+use Larrock\ComponentCatalog\Models\Catalog;
+use Larrock\ComponentCategory\Models\Category;
+use Larrock\Core\Models\Link;
 use LarrockCatalog;
 use LarrockCategory;
 use Illuminate\Http\Request;
@@ -279,15 +282,17 @@ class AdminWizard
                 $data[$row['db']] = $request->get($key);
             }
         }
-        $catalog = LarrockCatalog::getModel()->fill($request->all());
 
+        $catalog = LarrockCatalog::getModel()->fill($request->all());
         if ($request->has('cost')) {
-            $catalog->cost = str_replace(',', '.', $catalog->cost);
+            $cost = str_replace(',', '.', $request->get('cost'));
+            $cost = str_replace(' ', '', $cost);
+            $catalog->cost = $cost;
         }
-        $catalog->url = str_slug($catalog->title);
+        $catalog->url = str_slug($catalog->title) . mt_rand(1,9999);
 
         if (\strlen($catalog->url) > 120) {
-            $catalog->url = str_limit($catalog->url, 120);
+            $catalog->url = str_limit($catalog->url, 120) . mt_rand(1,9999);
         }
 
         //Проверяем совпадение по url-товаров
@@ -322,7 +327,14 @@ class AdminWizard
         }
 
         if ($save = $catalog->save()) {
-            $catalog->getCategory()->attach($request->get('current_category'));
+            $link = new Link();
+            $link->id_parent = $catalog->id;
+            $link->id_child = $request->get('current_category');
+            $link->model_parent = Catalog::class;
+            $link->model_child = Category::class;
+            $link->save();
+            //$catalog->getCategory()->attach($request->get('current_category'));
+            //dd($catalog->getCategory());
             if ($request->has('foto') && $request->get('foto', '') !== '') {
                 $add_foto = $this->add_images($catalog->id, $request->get('foto'), 'catalog', $withoutimage);
 
@@ -358,13 +370,11 @@ class AdminWizard
     public function search_category($row)
     {
         $category = [];
-        if (preg_match('/{=R\d=}/', $row, $match)) {
-            if (preg_match('/(.*?){=R\d=}/', $row, $title)) {
-                $category['title'] = $title['1'];
-            }
-            if (preg_match('/{=R(.*?)=}/', $row, $level)) {
-                $category['level'] = $level['1'];
-            }
+        preg_match('/(?P<title>[a-zA-Z0-9-_а-яА-Я\s]+){=R(?P<level>[0-9]+)=}/u', $row, $match);
+
+        if (array_key_exists('title', $match) && array_key_exists('level', $match)) {
+            $category['title'] = $match['title'];
+            $category['level'] = $match['level'];
 
             return $category;
         }
