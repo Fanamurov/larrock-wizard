@@ -370,7 +370,7 @@ class AdminWizard
     public function search_category($row)
     {
         $category = [];
-        preg_match('/(?P<title>[a-zA-Z0-9-_а-яА-Я\s]+){=R(?P<level>[0-9]+)=}/u', $row, $match);
+        preg_match('/(?P<title>[a-zA-Z0-9-_а-яА-Я,.;:!\s]+){=R(?P<level>[0-9]+)=}/u', $row, $match);
 
         if (array_key_exists('title', $match) && array_key_exists('level', $match)) {
             $category['title'] = $match['title'];
