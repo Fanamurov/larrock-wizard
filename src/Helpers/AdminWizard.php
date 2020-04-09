@@ -11,6 +11,7 @@ use Larrock\Core\Models\Link;
 use LarrockCatalog;
 use LarrockCategory;
 use Illuminate\Http\Request;
+use Spatie\MediaLibrary\Exceptions\FileCannotBeAdded\FileDoesNotExist;
 use Spatie\MediaLibrary\Media;
 use Larrock\Core\Models\Config as Model_Config;
 
@@ -140,7 +141,6 @@ class AdminWizard
         }
 
         $category = LarrockCategory::getModel()->fill($data);
-
         $category->component = 'catalog';
 
         if ($category->level === 1) {
@@ -195,7 +195,7 @@ class AdminWizard
         }
 
         if ($save = $category->save()) {
-            if ($request->has('foto') && $request->get('foto', '') !== '') {
+            if ($request->has('foto') && !empty($request->get('foto'))) {
                 $add_foto = $this->add_images($category->id, $request->get('foto'), 'category', $withoutimage);
 
                 return ['category_id' => $category->id, 'category_level' => $category->level,
@@ -254,6 +254,13 @@ class AdminWizard
                     } elseif ($type === 'catalog') {
                         $content = LarrockCatalog::getModel()->findOrFail($id_content);
                     }
+
+                    try {
+                        $content->addMedia(base_path('public_html/media/Wizard/'.$image))->preservingOriginal()->toMediaCollection('images');
+                    } catch (FileDoesNotExist $e) {
+                        dd($images, $image, $content);
+                    }
+
                     if (! $content->addMedia(base_path('public_html/media/Wizard/'.$image))->preservingOriginal()->toMediaCollection('images')) {
                         return ['status' => 'error', 'message' => 'Фото '.$image.' найдено, но не обработано'];
                     }
@@ -370,7 +377,7 @@ class AdminWizard
     public function search_category($row)
     {
         $category = [];
-        preg_match('/(?P<title>[a-zA-Z0-9-_а-яА-Я,.;:!\s]+){=R(?P<level>[0-9]+)=}/u', $row, $match);
+        preg_match('/(?P<title>[\d\D\s]+){=R(?P<level>[0-9]+)=}/u', $row, $match);
 
         if (array_key_exists('title', $match) && array_key_exists('level', $match)) {
             $category['title'] = $match['title'];
