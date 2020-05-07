@@ -63,6 +63,10 @@ class AdminWizardController extends Controller
      */
     public function sheetParse($sheet = 0, AdminWizard $adminWizard)
     {
+        if (env('APP_ENV') === 'local') {
+            ini_set('max_execution_time', 120);
+        }
+
         $data['data'] = Excel::selectSheetsByIndex($sheet)->load($adminWizard->findXLSX(), function ($reader) {
         })->get();
         $data['rows'] = $adminWizard->rows;
@@ -186,13 +190,17 @@ class AdminWizardController extends Controller
             $data->type = 'wizard';
             $data->value = serialize($config);
         } else {
-            $data->value = serialize($config);
+            $merge = array_merge($data->value, $config);
+            $data->value = serialize($merge);
         }
+        
         if ($data->save()) {
             \Session::push('message.success', 'Настройки полей импорта сохранены');
         } else {
             \Session::push('message.danger', 'Настройки полей импорта не сохранены');
         }
+
+        \Cache::flush();
 
         return back()->withInput();
     }
@@ -278,6 +286,7 @@ class AdminWizardController extends Controller
             $schema = $request->get('column').':text:nullable';
             \Artisan::call('make:migration:schema', ['name' => 'update_catalog_table', '--schema' => $schema, '--model' => 'false']);
             \Artisan::call('migrate');
+            \Cache::flush();
 
             return response()->json(['status' => 'success', 'message' => $request->get('column').' добавлена в колонки таблицы catalog']);
         }
